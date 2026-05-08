@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Tic Tac Toe AI</title>
+    <link rel="stylesheet" href="/styles.css" />
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -30,6 +31,37 @@
       }
       .hidden {
         display: none;
+      }
+      /* Game board styles */
+      .game-container {
+        margin: 20px auto;
+        max-width: 300px;
+      }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(3, 100px);
+        grid-template-rows: repeat(3, 100px);
+        gap: 5px;
+        margin: 20px auto;
+      }
+      .cell {
+        width: 100px;
+        height: 100px;
+        background-color: #f0f0f0;
+        border: 2px solid #333;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 48px;
+        cursor: pointer;
+      }
+      .cell:hover {
+        background-color: #e0e0e0;
+      }
+      .status {
+        margin: 20px 0;
+        font-size: 20px;
+        font-weight: bold;
       }
     </style>
   </head>
@@ -69,20 +101,113 @@
       </form>
     </div>
 
-    <!-- Client-side script to check login status -->
+    <!-- Game Board (shown only when logged in) -->
+    <div id="game-container" class="game-container hidden">
+      <div class="status" id="status">Your turn (X)</div>
+      <div class="board" id="board">
+        <div class="cell" data-index="0"></div>
+        <div class="cell" data-index="1"></div>
+        <div class="cell" data-index="2"></div>
+        <div class="cell" data-index="3"></div>
+        <div class="cell" data-index="4"></div>
+        <div class="cell" data-index="5"></div>
+        <div class="cell" data-index="6"></div>
+        <div class="cell" data-index="7"></div>
+        <div class="cell" data-index="8"></div>
+      </div>
+    </div>
+
+    <!-- Client-side script to check login status and initialize game -->
     <script>
+      // Check auth status
       fetch("/check-auth")
         .then((response) => response.json())
         .then((data) => {
           if (data.loggedIn) {
-            // Hide forms, show welcome message
+            // Hide auth forms, show welcome message and game
             document.getElementById("auth-forms").classList.add("hidden");
             document
               .getElementById("welcome-message")
               .classList.remove("hidden");
             document.getElementById("username").textContent = data.username;
+            document
+              .getElementById("game-container")
+              .classList.remove("hidden");
+            initializeGame();
           }
         });
+
+      // Game logic
+      function initializeGame() {
+        const board = document.getElementById("board");
+        const cells = document.querySelectorAll(".cell");
+        const statusDisplay = document.getElementById("status");
+        let currentPlayer = "X";
+        let gameState = ["", "", "", "", "", "", "", "", ""];
+
+        // Handle cell click
+        function handleCellClick(e) {
+          const clickedCell = e.target;
+          const clickedCellIndex = parseInt(
+            clickedCell.getAttribute("data-index"),
+          );
+
+          // If cell is already filled or game is over, ignore the click
+          if (
+            gameState[clickedCellIndex] !== "" ||
+            !statusDisplay.textContent.includes("turn")
+          ) {
+            return;
+          }
+
+          // Update game state and UI
+          gameState[clickedCellIndex] = currentPlayer;
+          clickedCell.textContent = currentPlayer;
+
+          // Check for win or tie
+          if (checkWin()) {
+            statusDisplay.textContent = `Player ${currentPlayer} wins!`;
+            return;
+          } else if (checkTie()) {
+            statusDisplay.textContent = "Game ended in a tie!";
+            return;
+          }
+
+          // Switch player
+          currentPlayer = currentPlayer === "X" ? "O" : "X";
+          statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        // Check for win
+        function checkWin() {
+          const winConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8], // Rows
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8], // Columns
+            [0, 4, 8],
+            [2, 4, 6], // Diagonals
+          ];
+
+          return winConditions.some((condition) => {
+            return condition.every((index) => {
+              return gameState[index] === currentPlayer;
+            });
+          });
+        }
+
+        // Check for tie
+        function checkTie() {
+          return !gameState.includes("");
+        }
+
+        // Add event listeners to cells
+        cells.forEach((cell) => {
+          cell.addEventListener("click", handleCellClick);
+        });
+      }
     </script>
   </body>
 </html>
