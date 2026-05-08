@@ -1,10 +1,88 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Tic Tac Toe AI</title>
-</head>
-<body>
-  <h1>Hello, World!</h1>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tic Tac Toe AI</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        text-align: center;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 20px 0;
+      }
+      input,
+      button {
+        padding: 8px;
+        font-size: 16px;
+      }
+      button {
+        cursor: pointer;
+      }
+      .user-info {
+        margin: 20px 0;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Tic Tac Toe AI</h1>
+
+    <!-- Welcome message (hidden by default) -->
+    <div id="welcome-message" class="user-info hidden">
+      <p>Welcome, <span id="username"></span>!</p>
+      <a href="/logout" id="logout-link">Logout</a>
+    </div>
+
+    <!-- Auth forms (shown by default) -->
+    <div id="auth-forms">
+      <h2>Register</h2>
+      <form action="/register" method="POST">
+        <input type="text" name="username" placeholder="Username" required />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
+        <button type="submit">Register</button>
+      </form>
+
+      <h2>Login</h2>
+      <form action="/login" method="POST">
+        <input type="text" name="username" placeholder="Username" required />
+        <input
+          type="password"
+          name="password"
+          placeholder="Password"
+          required
+        />
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <!-- Client-side script to check login status -->
+    <script>
+      fetch("/check-auth")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.loggedIn) {
+            // Hide forms, show welcome message
+            document.getElementById("auth-forms").classList.add("hidden");
+            document
+              .getElementById("welcome-message")
+              .classList.remove("hidden");
+            document.getElementById("username").textContent = data.username;
+          }
+        });
+    </script>
+  </body>
 </html>
