@@ -63,6 +63,13 @@
         font-size: 20px;
         font-weight: bold;
       }
+      .game-actions {
+        margin: 20px 0;
+      }
+      .game-actions button {
+        margin: 0 10px;
+        padding: 10px 20px;
+      }
     </style>
   </head>
   <body>
@@ -103,7 +110,7 @@
 
     <!-- Game Board (shown only when logged in) -->
     <div id="game-container" class="game-container hidden">
-      <div class="status" id="status">Your turn (X)</div>
+      <div class="status" id="status">Player X's turn</div>
       <div class="board" id="board">
         <div class="cell" data-index="0"></div>
         <div class="cell" data-index="1"></div>
@@ -115,16 +122,18 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
       </div>
+      <div class="game-actions">
+        <button id="new-game-btn">New Game</button>
+      </div>
     </div>
 
-    <!-- Client-side script to check login status and initialize game -->
+    <!-- Client-side script -->
     <script>
       // Check auth status
       fetch("/check-auth")
         .then((response) => response.json())
         .then((data) => {
           if (data.loggedIn) {
-            // Hide auth forms, show welcome message and game
             document.getElementById("auth-forms").classList.add("hidden");
             document
               .getElementById("welcome-message")
@@ -142,8 +151,23 @@
         const board = document.getElementById("board");
         const cells = document.querySelectorAll(".cell");
         const statusDisplay = document.getElementById("status");
+        const newGameBtn = document.getElementById("new-game-btn");
+
         let currentPlayer = "X";
         let gameState = ["", "", "", "", "", "", "", "", ""];
+        let gameActive = true;
+
+        // Win conditions
+        const winConditions = [
+          [0, 1, 2],
+          [3, 4, 5],
+          [6, 7, 8], // Rows
+          [0, 3, 6],
+          [1, 4, 7],
+          [2, 5, 8], // Columns
+          [0, 4, 8],
+          [2, 4, 6], // Diagonals
+        ];
 
         // Handle cell click
         function handleCellClick(e) {
@@ -152,11 +176,8 @@
             clickedCell.getAttribute("data-index"),
           );
 
-          // If cell is already filled or game is over, ignore the click
-          if (
-            gameState[clickedCellIndex] !== "" ||
-            !statusDisplay.textContent.includes("turn")
-          ) {
+          // If cell is already filled or game is not active, ignore the click
+          if (gameState[clickedCellIndex] !== "" || !gameActive) {
             return;
           }
 
@@ -167,9 +188,11 @@
           // Check for win or tie
           if (checkWin()) {
             statusDisplay.textContent = `Player ${currentPlayer} wins!`;
+            gameActive = false;
             return;
           } else if (checkTie()) {
             statusDisplay.textContent = "Game ended in a tie!";
+            gameActive = false;
             return;
           }
 
@@ -180,17 +203,6 @@
 
         // Check for win
         function checkWin() {
-          const winConditions = [
-            [0, 1, 2],
-            [3, 4, 5],
-            [6, 7, 8], // Rows
-            [0, 3, 6],
-            [1, 4, 7],
-            [2, 5, 8], // Columns
-            [0, 4, 8],
-            [2, 4, 6], // Diagonals
-          ];
-
           return winConditions.some((condition) => {
             return condition.every((index) => {
               return gameState[index] === currentPlayer;
@@ -203,10 +215,22 @@
           return !gameState.includes("");
         }
 
-        // Add event listeners to cells
+        // Reset game
+        function resetGame() {
+          gameState = ["", "", "", "", "", "", "", "", ""];
+          currentPlayer = "X";
+          gameActive = true;
+          cells.forEach((cell) => {
+            cell.textContent = "";
+          });
+          statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+        }
+
+        // Add event listeners
         cells.forEach((cell) => {
           cell.addEventListener("click", handleCellClick);
         });
+        newGameBtn.addEventListener("click", resetGame);
       }
     </script>
   </body>
