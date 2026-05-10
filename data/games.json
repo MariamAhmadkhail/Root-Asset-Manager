@@ -62,5 +62,37 @@
     ],
     "winner": null,
     "timestamp": "2026-05-10T13:28:52.485Z"
+  },
+  {
+    "username": "test",
+    "moves": [
+      "X",
+      "X",
+      "O",
+      "X",
+      "O",
+      "",
+      "O",
+      "O",
+      "X"
+    ],
+    "winner": "O",
+    "timestamp": "2026-05-10T14:08:10.981Z"
+  },
+  {
+    "username": "test",
+    "moves": [
+      "X",
+      "",
+      "O",
+      "O",
+      "O",
+      "X",
+      "O",
+      "X",
+      "X"
+    ],
+    "winner": "O",
+    "timestamp": "2026-05-10T14:08:19.497Z"
   }
 ]
