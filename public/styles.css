@@ -1,0 +1,28 @@
+/* ===== CP07 ADDITIONS ===== */
+/* Difficulty selector styles */
+.difficulty-selector {
+  margin: 10px 0;
+}
+.difficulty-selector select {
+  padding: 8px;
+  font-size: 16px;
+  margin-left: 10px;
+}
+/* AI comment styles */
+.ai-comment {
+  margin: 10px 0;
+  font-style: italic;
+  color: #555;
+  min-height: 20px;
+}
+/* ======================= */
+
+/* Personality selector styles */
+.personality-selector {
+  margin: 10px 0;
+}
+.personality-selector select {
+  padding: 8px;
+  font-size: 16px;
+  margin-left: 10px;
+}

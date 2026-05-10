@@ -1,9 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
+    <meta charset="utf-8" />
     <title>Tic Tac Toe AI</title>
-    <link rel="stylesheet" href="/styles.css" />
+    <link href="/styles.css" rel="stylesheet" />
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -32,7 +32,6 @@
       .hidden {
         display: none;
       }
-      /* Game board styles */
       .game-container {
         margin: 20px auto;
         max-width: 300px;
@@ -78,6 +77,22 @@
         margin: 0 10px;
         padding: 8px 16px;
       }
+      /* Difficulty selector styles */
+      .difficulty-selector {
+        margin: 10px 0;
+      }
+      .difficulty-selector select {
+        padding: 8px;
+        font-size: 16px;
+        margin-left: 10px;
+      }
+      /* AI comment styles */
+      .ai-comment {
+        margin: 10px 0;
+        font-style: italic;
+        color: #555;
+        min-height: 20px;
+      }
       /* Game history modal styles */
       .game-history {
         margin: 20px 0;
@@ -119,7 +134,7 @@
     <h1>Tic Tac Toe AI</h1>
 
     <!-- Welcome message (hidden by default) -->
-    <div id="welcome-message" class="user-info hidden">
+    <div class="user-info hidden" id="welcome-message">
       <p>Welcome, <span id="username"></span>!</p>
       <a href="/logout" id="logout-link">Logout</a>
     </div>
@@ -128,10 +143,10 @@
     <div id="auth-forms">
       <h2>Register</h2>
       <form action="/register" method="POST">
-        <input type="text" name="username" placeholder="Username" required />
+        <input name="username" type="text" placeholder="Username" required />
         <input
-          type="password"
           name="password"
+          type="password"
           placeholder="Password"
           required
         />
@@ -140,10 +155,10 @@
 
       <h2>Login</h2>
       <form action="/login" method="POST">
-        <input type="text" name="username" placeholder="Username" required />
+        <input name="username" type="text" placeholder="Username" required />
         <input
-          type="password"
           name="password"
+          type="password"
           placeholder="Password"
           required
         />
@@ -158,6 +173,27 @@
         <button id="pvp-btn">PvP (Human vs Human)</button>
         <button id="pvai-btn">PvAI (Human vs AI)</button>
       </div>
+      <!-- Difficulty selector (for PvAI mode) -->
+      <div class="difficulty-selector">
+        <label for="difficulty">AI Difficulty:</label>
+        <select id="difficulty" disabled>
+          <option value="easy">Easy (Random)</option>
+          <option value="medium" selected>Medium (Smart)</option>
+          <option value="hard">Hard (Groq)</option>
+        </select>
+      </div>
+
+      <!-- Personality selector (for PvAI mode) -->
+      <div class="personality-selector">
+        <label for="personality">AI Personality:</label>
+        <select id="personality" disabled>
+          <option value="aggressive">Aggressive</option>
+          <option value="defensive">Defensive</option>
+          <option value="chill" selected>Chill</option>
+        </select>
+      </div>
+      <!-- AI comment display -->
+      <div class="ai-comment" id="ai-comment"></div>
       <div class="status" id="status">Player X's turn</div>
       <div class="board" id="board">
         <div class="cell" data-index="0"></div>
@@ -207,7 +243,6 @@
 
       // Game logic
       function initializeGame() {
-        const board = document.getElementById("board");
         const cells = document.querySelectorAll(".cell");
         const statusDisplay = document.getElementById("status");
         const newGameBtn = document.getElementById("new-game-btn");
@@ -217,28 +252,32 @@
         const gamesList = document.getElementById("games-list");
         const pvpBtn = document.getElementById("pvp-btn");
         const pvaiBtn = document.getElementById("pvai-btn");
+        const difficultySelect = document.getElementById("difficulty");
+        const aiCommentDisplay = document.getElementById("ai-comment");
 
         let currentPlayer = "X";
-        let gameState = ["", "", "", "", "", "", "", "", ""];
+        let gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
         let gameActive = true;
-        let gameMode = "pvp"; // Default to PvP (Human vs Human)
-        let isAITurn = false; // Track if it's AI's turn
+        let gameMode = "pvp";
+        let isAITurn = false;
+        let difficulty = "medium";
 
         // Win conditions
         const winConditions = [
           [0, 1, 2],
           [3, 4, 5],
-          [6, 7, 8], // Rows
+          [6, 7, 8],
           [0, 3, 6],
           [1, 4, 7],
-          [2, 5, 8], // Columns
+          [2, 5, 8],
           [0, 4, 8],
-          [2, 4, 6], // Diagonals
+          [2, 4, 6],
         ];
+        const personalitySelect = document.getElementById("personality");
+        let personality = "chill"; // Default to Chill
 
         // Handle cell click
         function handleCellClick(e) {
-          // Prevent clicks if modal is open, game is inactive, or it's AI's turn
           if (
             !historyModal.classList.contains("hidden") ||
             !gameActive ||
@@ -279,13 +318,13 @@
           if (gameMode === "pvai" && currentPlayer === "O" && gameActive) {
             isAITurn = true;
             statusDisplay.textContent = "AI is thinking...";
+            aiCommentDisplay.textContent = "";
             fetch("/ai-move", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 moves: gameState,
+                difficulty: difficulty,
               }),
             })
               .then((response) => response.json())
@@ -293,6 +332,9 @@
                 if (data.move !== undefined && gameState[data.move] === "") {
                   gameState[data.move] = "O";
                   cells[data.move].textContent = "O";
+                  if (data.comment) {
+                    aiCommentDisplay.textContent = `AI: ${data.comment}`;
+                  }
                   if (checkWin()) {
                     statusDisplay.textContent = "AI wins!";
                     saveGame("O");
@@ -334,9 +376,7 @@
         function saveGame(winner) {
           fetch("/save-game", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               moves: gameState,
               winner: winner,
@@ -369,10 +409,10 @@
                   : "Tie";
                 const date = new Date(game.timestamp).toLocaleString();
                 gameItem.innerHTML = `
-                  <p><strong>Game ${index + 1}</strong> - ${date}</p>
-                  <p>${winnerText}</p>
-                  <p>Moves: ${game.moves.join(", ")}</p>
-                `;
+                <p><strong>Game ${index + 1}</strong> - ${date}</p>
+                <p>${winnerText}</p>
+                <p>Moves: ${game.moves.join(", ")}</p>
+              `;
                 gamesList.appendChild(gameItem);
               });
             })
@@ -384,7 +424,7 @@
 
         // Reset game
         function resetGame() {
-          gameState = ["", "", "", "", "", "", "", "", ""];
+          gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
           currentPlayer = "X";
           gameActive = true;
           isAITurn = false;
@@ -392,16 +432,19 @@
             cell.textContent = "";
           });
           statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
+          aiCommentDisplay.textContent = "";
         }
 
         // Set game mode
         function setGameMode(mode) {
           gameMode = mode;
-          // Update button text to show which mode is active
           pvpBtn.textContent =
             mode === "pvp" ? "PvP (Human vs Human) ✅" : "PvP (Human vs Human)";
           pvaiBtn.textContent =
             mode === "pvai" ? "PvAI (Human vs AI) ✅" : "PvAI (Human vs AI)";
+          // Enable/disable difficulty and personality selectors based on mode
+          difficultySelect.disabled = mode !== "pvai";
+          personalitySelect.disabled = mode !== "pvai";
           resetGame();
         }
 
@@ -417,20 +460,30 @@
         closeHistoryBtn.addEventListener("click", () => {
           historyModal.classList.add("hidden");
         });
-        // Close modal when clicking outside the modal content
         historyModal.addEventListener("click", (e) => {
           if (e.target === historyModal) {
             historyModal.classList.add("hidden");
           }
         });
-        // Game mode toggle
         pvpBtn.addEventListener("click", () => {
           setGameMode("pvp");
-          console.log("Switched to PvP mode. Game mode:", gameMode); // Debug log
+          console.log("Switched to PvP mode. Game mode:", gameMode);
         });
         pvaiBtn.addEventListener("click", () => {
           setGameMode("pvai");
-          console.log("Switched to PvAI mode. Game mode:", gameMode); // Debug log
+          console.log("Switched to PvAI mode. Game mode:", gameMode);
+        });
+        difficultySelect.addEventListener("change", () => {
+          difficulty = difficultySelect.value;
+          console.log("Difficulty set to:", difficulty);
+          resetGame();
+        });
+
+        // Personality selector change
+        personalitySelect.addEventListener("change", () => {
+          personality = personalitySelect.value;
+          console.log("Personality set to:", personality);
+          resetGame();
         });
       }
     </script>

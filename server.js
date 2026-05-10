@@ -4,7 +4,7 @@ const path = require("path");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const fs = require("fs");
-const Groq = require("groq-sdk"); // Groq SDK for AI
+const Groq = require("groq-sdk");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -173,77 +173,151 @@ function checkWinCondition(state, player) {
   const winConditions = [
     [0, 1, 2],
     [3, 4, 5],
-    [6, 7, 8], // Rows
+    [6, 7, 8],
     [0, 3, 6],
     [1, 4, 7],
-    [2, 5, 8], // Columns
+    [2, 5, 8],
     [0, 4, 8],
-    [2, 4, 6], // Diagonals
+    [2, 4, 6],
   ];
   return winConditions.some((condition) =>
     condition.every((index) => state[index] === player),
   );
 }
 
-// AI move endpoint
+// AI personalities and difficulties
+const aiPersonalities = {
+  // Difficulty comments (existing)
+  easy: {
+    comments: [
+      "I'm just playing randomly!",
+      "This should be easy for you!",
+      "Let's see if you can beat me!",
+    ],
+  },
+  medium: {
+    comments: [
+      "I'm blocking your win!",
+      "You won't beat me that easily!",
+      "I see your strategy!",
+    ],
+  },
+  hard: {
+    comments: [
+      "I'm calculating the perfect move!",
+      "You can't beat me at this level!",
+      "This is my optimal strategy!",
+    ],
+  },
+
+  // Personality comments (new)
+  aggressive: {
+    comments: [
+      "I'll crush you!",
+      "Prepare to lose!",
+      "You don't stand a chance!",
+      "I always win!",
+    ],
+  },
+  defensive: {
+    comments: [
+      "I'll protect my territory!",
+      "You won't get past me!",
+      "I'm unbreakable!",
+      "Try to score, I dare you!",
+    ],
+  },
+  chill: {
+    comments: [
+      "Let's have fun!",
+      "No pressure, just a game!",
+      "Chill out, it's just Tic Tac Toe!",
+      "Good game either way!",
+    ],
+  },
+};
+
 app.post("/ai-move", async (req, res) => {
-  console.log("AI move endpoint called!"); // Debug log
   if (!req.session.user) {
-    console.log("User not logged in."); // Debug log
     return res.status(401).json({ error: "Not logged in." });
   }
 
-  const { moves } = req.body;
-  console.log("Received moves:", moves); // Debug log
-
+  const { moves, difficulty, personality } = req.body; // Now accepts personality
   if (!moves || !Array.isArray(moves) || moves.length !== 9) {
-    console.log("Invalid moves:", moves); // Debug log
     return res.status(400).json({ error: "Invalid moves." });
   }
 
-  // Use Groq to generate AI move (fallback to local logic if Groq fails)
-  try {
-    console.log("Calling Groq API..."); // Debug log
-    const response = await groq.chat.completions.create({
-      messages: [
-        {
-          role: "system",
-          content:
-            "You are an AI for Tic Tac Toe. Respond ONLY with a single number (0-8) representing the best move for player O. Do NOT add any other text, explanations, or formatting. Only return the number.",
-        },
-        {
-          role: "user",
-          content: `Current game state: ${moves.join(",")}. Player O's turn. Choose a legal move (0-8). Available moves: ${moves
-            .map((m, i) => (m === "" ? i : null))
-            .filter((i) => i !== null)
-            .join(",")}.`,
-        },
-      ],
-      model: "llama3-8b-instant",
-      temperature: 0.1,
-      max_tokens: 1,
-    });
+  let aiMove;
+  let comment = "";
 
-    const rawResponse = response.choices[0].message.content.trim();
-    console.log("Groq raw response:", rawResponse); // Debug log
+  // Handle difficulty levels
+  if (difficulty === "easy") {
+    const legalMoves = moves
+      .map((cell, index) => (cell === "" ? index : null))
+      .filter((val) => val !== null);
+    aiMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
+    // Use personality comment
+    comment =
+      aiPersonalities[personality].comments[
+        Math.floor(Math.random() * aiPersonalities[personality].comments.length)
+      ];
+  } else if (difficulty === "medium") {
+    aiMove = findBestMove(moves);
+    // Use personality comment
+    comment =
+      aiPersonalities[personality].comments[
+        Math.floor(Math.random() * aiPersonalities[personality].comments.length)
+      ];
+  } else {
+    // Hard: Use Groq
+    try {
+      const response = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are an AI for Tic Tac Toe. Respond ONLY with a single number (0-8) representing the best move for player O. Do NOT add any other text, explanations, or formatting. Only return the number.",
+          },
+          {
+            role: "user",
+            content: `Current game state: ${moves.join(",")}. Player O's turn. Choose a legal move (0-8). Available moves: ${moves
+              .map((m, i) => (m === "" ? i : null))
+              .filter((i) => i !== null)
+              .join(",")}.`,
+          },
+        ],
+        model: "llama3-8b-instant",
+        temperature: 0.1,
+        max_tokens: 1,
+      });
 
-    let aiMove = parseInt(rawResponse);
+      const rawResponse = response.choices[0].message.content.trim();
+      aiMove = parseInt(rawResponse);
 
-    // Validate the move
-    if (isNaN(aiMove) || aiMove < 0 || aiMove > 8 || moves[aiMove] !== "") {
-      console.log("Groq returned invalid move. Falling back to local logic."); // Debug log
+      if (isNaN(aiMove) || aiMove < 0 || aiMove > 8 || moves[aiMove] !== "") {
+        aiMove = findBestMove(moves);
+      }
+      // Use personality comment
+      comment =
+        aiPersonalities[personality].comments[
+          Math.floor(
+            Math.random() * aiPersonalities[personality].comments.length,
+          )
+        ];
+    } catch (error) {
+      console.error("Groq API error:", error);
       aiMove = findBestMove(moves);
+      // Use personality comment
+      comment =
+        aiPersonalities[personality].comments[
+          Math.floor(
+            Math.random() * aiPersonalities[personality].comments.length,
+          )
+        ];
     }
-
-    console.log("Final AI move:", aiMove); // Debug log
-    res.json({ move: aiMove, source: isNaN(aiMove) ? "local" : "groq" });
-  } catch (error) {
-    console.error("Groq API error:", error); // Debug log
-    // Fallback to local logic if Groq fails
-    const bestMove = findBestMove(moves);
-    console.log("Using local fallback. Best move:", bestMove); // Debug log
-    res.json({ move: bestMove, source: "local" });
   }
+
+  res.json({ move: aiMove, comment: comment });
 });
 
 // Start server
