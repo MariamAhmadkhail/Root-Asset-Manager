@@ -70,6 +70,41 @@
         margin: 0 10px;
         padding: 10px 20px;
       }
+      /* Game history modal styles */
+      .game-history {
+        margin: 20px 0;
+      }
+      #history-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      #history-modal.hidden {
+        display: none;
+      }
+      #history-modal .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        max-width: 80%;
+        max-height: 80%;
+        overflow: auto;
+      }
+      #games-list {
+        margin: 10px 0;
+      }
+      #games-list .game-item {
+        margin: 10px 0;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+      }
     </style>
   </head>
   <body>
@@ -125,6 +160,17 @@
       <div class="game-actions">
         <button id="new-game-btn">New Game</button>
       </div>
+      <!-- Game History Section -->
+      <div class="game-history">
+        <button id="view-history-btn">View Game History</button>
+        <div id="history-modal" class="hidden">
+          <div class="modal-content">
+            <h3>Your Game History</h3>
+            <div id="games-list"></div>
+            <button id="close-history-btn">Close</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Client-side script -->
@@ -152,6 +198,10 @@
         const cells = document.querySelectorAll(".cell");
         const statusDisplay = document.getElementById("status");
         const newGameBtn = document.getElementById("new-game-btn");
+        const viewHistoryBtn = document.getElementById("view-history-btn");
+        const historyModal = document.getElementById("history-modal");
+        const closeHistoryBtn = document.getElementById("close-history-btn");
+        const gamesList = document.getElementById("games-list");
 
         let currentPlayer = "X";
         let gameState = ["", "", "", "", "", "", "", "", ""];
@@ -171,32 +221,35 @@
 
         // Handle cell click
         function handleCellClick(e) {
+          // Prevent clicks if modal is open or game is inactive
+          if (!historyModal.classList.contains("hidden") || !gameActive) {
+            return;
+          }
+
           const clickedCell = e.target;
           const clickedCellIndex = parseInt(
             clickedCell.getAttribute("data-index"),
           );
 
-          // If cell is already filled or game is not active, ignore the click
-          if (gameState[clickedCellIndex] !== "" || !gameActive) {
+          if (gameState[clickedCellIndex] !== "") {
             return;
           }
 
-          // Update game state and UI
           gameState[clickedCellIndex] = currentPlayer;
           clickedCell.textContent = currentPlayer;
 
-          // Check for win or tie
           if (checkWin()) {
             statusDisplay.textContent = `Player ${currentPlayer} wins!`;
+            saveGame(currentPlayer);
             gameActive = false;
             return;
           } else if (checkTie()) {
             statusDisplay.textContent = "Game ended in a tie!";
+            saveGame(null);
             gameActive = false;
             return;
           }
 
-          // Switch player
           currentPlayer = currentPlayer === "X" ? "O" : "X";
           statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
         }
@@ -215,6 +268,58 @@
           return !gameState.includes("");
         }
 
+        // Save game to server
+        function saveGame(winner) {
+          fetch("/save-game", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              moves: gameState,
+              winner: winner,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Game saved:", data);
+            })
+            .catch((error) => {
+              console.error("Error saving game:", error);
+            });
+        }
+
+        // Load and display game history
+        function loadGameHistory() {
+          fetch("/user-games")
+            .then((response) => response.json())
+            .then((games) => {
+              gamesList.innerHTML = "";
+              if (games.length === 0) {
+                gamesList.innerHTML = "<p>No games played yet.</p>";
+                return;
+              }
+              games.forEach((game, index) => {
+                const gameItem = document.createElement("div");
+                gameItem.className = "game-item";
+                const winnerText = game.winner
+                  ? `Winner: ${game.winner}`
+                  : "Tie";
+                const date = new Date(game.timestamp).toLocaleString();
+                gameItem.innerHTML = `
+                  <p><strong>Game ${index + 1}</strong> - ${date}</p>
+                  <p>${winnerText}</p>
+                  <p>Moves: ${game.moves.join(", ")}</p>
+                `;
+                gamesList.appendChild(gameItem);
+              });
+            })
+            .catch((error) => {
+              console.error("Error loading game history:", error);
+              gamesList.innerHTML = "<p>Error loading game history.</p>";
+            });
+        }
+
         // Reset game
         function resetGame() {
           gameState = ["", "", "", "", "", "", "", "", ""];
@@ -231,6 +336,19 @@
           cell.addEventListener("click", handleCellClick);
         });
         newGameBtn.addEventListener("click", resetGame);
+        viewHistoryBtn.addEventListener("click", () => {
+          historyModal.classList.remove("hidden");
+          loadGameHistory();
+        });
+        closeHistoryBtn.addEventListener("click", () => {
+          historyModal.classList.add("hidden");
+        });
+        // Close modal when clicking outside the modal content
+        historyModal.addEventListener("click", (e) => {
+          if (e.target === historyModal) {
+            historyModal.classList.add("hidden");
+          }
+        });
       }
     </script>
   </body>

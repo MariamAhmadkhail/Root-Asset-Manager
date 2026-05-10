@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.static(path.join(__dirname, "public")));
 app.use(bodyParser.urlencoded({ extended: true })); // Parse form data
+app.use(bodyParser.json()); // <-- ADDED: Parse JSON requests
 app.use(
   session({
     secret: "your-secret-key", // Change this later for production
@@ -34,6 +35,23 @@ function readUsers() {
 function writeUsers(users) {
   const usersFilePath = path.join(__dirname, "data", "users.json");
   fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), "utf8");
+}
+
+// --- ADDED: Helper functions for games.json ---
+// Helper function to read games from games.json
+function readGames() {
+  const gamesFilePath = path.join(__dirname, "data", "games.json");
+  if (!fs.existsSync(gamesFilePath)) {
+    fs.writeFileSync(gamesFilePath, "[]", "utf8");
+  }
+  const gamesData = fs.readFileSync(gamesFilePath, "utf8");
+  return JSON.parse(gamesData || "[]");
+}
+
+// Helper function to write games to games.json
+function writeGames(games) {
+  const gamesFilePath = path.join(__dirname, "data", "games.json");
+  fs.writeFileSync(gamesFilePath, JSON.stringify(games, null, 2), "utf8");
 }
 
 // Root route: Serve index.html
@@ -93,6 +111,44 @@ app.get("/check-auth", (req, res) => {
   } else {
     res.json({ loggedIn: false });
   }
+});
+
+// --- ADDED: Endpoints for saving/fetching games ---
+// Save game endpoint
+app.post("/save-game", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+
+  const { moves, winner } = req.body;
+  if (!moves || !Array.isArray(moves) || moves.length !== 9) {
+    return res.status(400).json({ error: "Invalid moves." });
+  }
+
+  const games = readGames();
+  const newGame = {
+    username: req.session.user.username,
+    moves: moves,
+    winner: winner || null, // null for ties
+    timestamp: new Date().toISOString(),
+  };
+  games.push(newGame);
+  writeGames(games);
+
+  res.json({ success: true, game: newGame });
+});
+
+// Get user games endpoint
+app.get("/user-games", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+
+  const games = readGames();
+  const userGames = games.filter(
+    (game) => game.username === req.session.user.username,
+  );
+  res.json(userGames);
 });
 
 // Start the server
