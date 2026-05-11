@@ -1,30 +1,26 @@
-/* ===== CP07 ADDITIONS ===== */
-/* Difficulty selector styles */
-.difficulty-selector {
-  margin: 10px 0;
+/* Game board styles */
+.board {
+  display: grid;
+  grid-template-columns: repeat(3, 100px);
+  grid-template-rows: repeat(3, 100px);
+  gap: 5px;
+  margin: 20px auto;
 }
-.difficulty-selector select {
-  padding: 8px;
-  font-size: 16px;
-  margin-left: 10px;
-}
-/* AI comment styles */
-.ai-comment {
-  margin: 10px 0;
-  font-style: italic;
-  color: #555;
-  min-height: 20px;
-}
-/* ======================= */
 
-/* Personality selector styles */
-.personality-selector {
-  margin: 10px 0;
+.cell {
+  width: 100px;
+  height: 100px;
+  background-color: #f0f0f0;
+  border: 2px solid #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 48px;
+  cursor: pointer;
 }
-.personality-selector select {
-  padding: 8px;
-  font-size: 16px;
-  margin-left: 10px;
+
+.cell:hover {
+  background-color: #e0e0e0;
 }
 
 /* Stats page styles */
@@ -34,34 +30,157 @@
   padding: 20px;
   text-align: center;
 }
+
 .stats-tabs {
   margin: 20px 0;
 }
+
 .stats-tabs button {
   margin: 0 10px;
   padding: 8px 16px;
   cursor: pointer;
 }
+
 .stats-content {
   margin: 20px 0;
 }
+
 table {
   width: 100%;
   border-collapse: collapse;
   margin: 10px 0;
 }
+
 th, td {
   border: 1px solid #ddd;
   padding: 8px;
   text-align: center;
 }
+
 th {
   background-color: #f2f2f2;
 }
+
 #back-to-game-btn {
   margin: 20px 0;
   padding: 10px 20px;
 }
+
+/* Other existing styles */
+body {
+  font-family: Arial, sans-serif;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  text-align: center;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px 0;
+}
+
+input, button {
+  padding: 8px;
+  font-size: 16px;
+}
+
+button {
+  cursor: pointer;
+}
+
+.user-info {
+  margin: 20px 0;
+}
+
 .hidden {
   display: none;
+}
+
+.game-container {
+  margin: 20px auto;
+  max-width: 300px;
+}
+
+.status {
+  margin: 20px 0;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.game-actions {
+  margin: 20px 0;
+}
+
+.game-actions button {
+  margin: 0 10px;
+  padding: 10px 20px;
+}
+
+.game-mode-toggle {
+  margin: 20px 0;
+}
+
+.game-mode-toggle button {
+  margin: 0 10px;
+  padding: 8px 16px;
+}
+
+.difficulty-selector, .personality-selector {
+  margin: 10px 0;
+}
+
+.difficulty-selector select, .personality-selector select {
+  padding: 8px;
+  font-size: 16px;
+  margin-left: 10px;
+}
+
+.ai-comment {
+  margin: 10px 0;
+  font-style: italic;
+  color: #555;
+  min-height: 20px;
+}
+
+.game-history {
+  margin: 20px 0;
+}
+
+#history-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+#history-modal.hidden {
+  display: none;
+}
+
+#history-modal .modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  max-width: 80%;
+  max-height: 80%;
+  overflow: auto;
+}
+
+#games-list {
+  margin: 10px 0;
+}
+
+#games-list .game-item {
+  margin: 10px 0;
+  padding: 10px;
+  border-bottom: 1px solid #eee;
 }

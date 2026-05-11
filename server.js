@@ -108,7 +108,7 @@ app.post("/save-game", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in." });
   }
-  const { moves, winner, difficulty, personality } = req.body; // Accept new fields
+  const { moves, winner, difficulty, personality } = req.body;
   if (!moves || !Array.isArray(moves) || moves.length !== 9) {
     return res.status(400).json({ error: "Invalid moves." });
   }
@@ -116,9 +116,9 @@ app.post("/save-game", (req, res) => {
   const newGame = {
     username: req.session.user.username,
     moves: moves,
-    winner: winner || null,
-    difficulty: difficulty || null, // Save difficulty
-    personality: personality || null, // Save personality
+    winner: winner, // Can be "X", "O", or null (tie)
+    difficulty: gameMode === "pvai" ? difficulty : null,
+    personality: gameMode === "pvai" ? personality : null,
     timestamp: new Date().toISOString(),
   };
   games.push(newGame);
@@ -138,38 +138,27 @@ app.get("/user-games", (req, res) => {
 });
 
 // --- CP06-ai: AI move endpoint ---
-// Helper function to find the best legal move for AI (fallback)
 function findBestMove(gameState) {
-  // Check for winning move
   for (let i = 0; i < gameState.length; i++) {
     if (gameState[i] === "") {
       const testState = [...gameState];
-      testState[i] = "O"; // AI is O
-      if (checkWinCondition(testState, "O")) {
-        return i;
-      }
+      testState[i] = "O";
+      if (checkWinCondition(testState, "O")) return i;
     }
   }
-
-  // Check for blocking move (prevent X from winning)
   for (let i = 0; i < gameState.length; i++) {
     if (gameState[i] === "") {
       const testState = [...gameState];
-      testState[i] = "X"; // Assume X plays here
-      if (checkWinCondition(testState, "X")) {
-        return i;
-      }
+      testState[i] = "X";
+      if (checkWinCondition(testState, "X")) return i;
     }
   }
-
-  // Choose a random legal move
   const legalMoves = gameState
     .map((cell, index) => (cell === "" ? index : null))
     .filter((val) => val !== null);
   return legalMoves[Math.floor(Math.random() * legalMoves.length)];
 }
 
-// Helper function to check win condition
 function checkWinCondition(state, player) {
   const winConditions = [
     [0, 1, 2],
@@ -186,56 +175,24 @@ function checkWinCondition(state, player) {
   );
 }
 
-// AI personalities and difficulties
 const aiPersonalities = {
-  // Difficulty comments (existing)
   easy: {
-    comments: [
-      "I'm just playing randomly!",
-      "This should be easy for you!",
-      "Let's see if you can beat me!",
-    ],
+    comments: ["I'm just playing randomly!", "This should be easy for you!"],
   },
   medium: {
-    comments: [
-      "I'm blocking your win!",
-      "You won't beat me that easily!",
-      "I see your strategy!",
-    ],
+    comments: ["I'm blocking your win!", "You won't beat me that easily!"],
   },
   hard: {
     comments: [
       "I'm calculating the perfect move!",
       "You can't beat me at this level!",
-      "This is my optimal strategy!",
     ],
   },
-
-  // Personality comments (new)
-  aggressive: {
-    comments: [
-      "I'll crush you!",
-      "Prepare to lose!",
-      "You don't stand a chance!",
-      "I always win!",
-    ],
-  },
+  aggressive: { comments: ["I'll crush you!", "Prepare to lose!"] },
   defensive: {
-    comments: [
-      "I'll protect my territory!",
-      "You won't get past me!",
-      "I'm unbreakable!",
-      "Try to score, I dare you!",
-    ],
+    comments: ["I'll protect my territory!", "You won't get past me!"],
   },
-  chill: {
-    comments: [
-      "Let's have fun!",
-      "No pressure, just a game!",
-      "Chill out, it's just Tic Tac Toe!",
-      "Good game either way!",
-    ],
-  },
+  chill: { comments: ["Let's have fun!", "No pressure, just a game!"] },
 };
 
 app.post("/ai-move", async (req, res) => {
@@ -243,7 +200,7 @@ app.post("/ai-move", async (req, res) => {
     return res.status(401).json({ error: "Not logged in." });
   }
 
-  const { moves, difficulty, personality = "chill" } = req.body; // Default to "chill" if not provided
+  const { moves, difficulty, personality = "chill" } = req.body;
   if (!moves || !Array.isArray(moves) || moves.length !== 9) {
     return res.status(400).json({ error: "Invalid moves." });
   }
@@ -251,33 +208,29 @@ app.post("/ai-move", async (req, res) => {
   let aiMove;
   let comment = "";
 
-  // Handle difficulty levels
   if (difficulty === "easy") {
     const legalMoves = moves
       .map((cell, index) => (cell === "" ? index : null))
       .filter((val) => val !== null);
     aiMove = legalMoves[Math.floor(Math.random() * legalMoves.length)];
-    // Use personality comment
     comment =
       aiPersonalities[personality].comments[
         Math.floor(Math.random() * aiPersonalities[personality].comments.length)
       ];
   } else if (difficulty === "medium") {
     aiMove = findBestMove(moves);
-    // Use personality comment
     comment =
       aiPersonalities[personality].comments[
         Math.floor(Math.random() * aiPersonalities[personality].comments.length)
       ];
   } else {
-    // Hard: Use Groq
     try {
       const response = await groq.chat.completions.create({
         messages: [
           {
             role: "system",
             content:
-              "You are an AI for Tic Tac Toe. Respond ONLY with a single number (0-8) representing the best move for player O. Do NOT add any other text, explanations, or formatting. Only return the number.",
+              "You are an AI for Tic Tac Toe. Respond ONLY with a single number (0-8) representing the best move for player O. Do NOT add any other text.",
           },
           {
             role: "user",
@@ -291,14 +244,10 @@ app.post("/ai-move", async (req, res) => {
         temperature: 0.1,
         max_tokens: 1,
       });
-
-      const rawResponse = response.choices[0].message.content.trim();
-      aiMove = parseInt(rawResponse);
-
+      aiMove = parseInt(response.choices[0].message.content.trim());
       if (isNaN(aiMove) || aiMove < 0 || aiMove > 8 || moves[aiMove] !== "") {
         aiMove = findBestMove(moves);
       }
-      // Use personality comment
       comment =
         aiPersonalities[personality].comments[
           Math.floor(
@@ -308,7 +257,6 @@ app.post("/ai-move", async (req, res) => {
     } catch (error) {
       console.error("Groq API error:", error);
       aiMove = findBestMove(moves);
-      // Use personality comment
       comment =
         aiPersonalities[personality].comments[
           Math.floor(
@@ -322,52 +270,48 @@ app.post("/ai-move", async (req, res) => {
 });
 
 // --- CP08-stats: Leaderboard and AI Stats Endpoints ---
-
-// Leaderboard endpoint
 app.get("/leaderboard", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in." });
   }
   const games = readGames();
-  const leaderboard = {};
+  const stats = {};
 
-  // Calculate wins/losses/ties for each player
   games.forEach((game) => {
-    if (!leaderboard[game.username]) {
-      leaderboard[game.username] = { wins: 0, losses: 0, ties: 0 };
+    if (!stats[game.username]) {
+      stats[game.username] = { wins: 0, losses: 0, ties: 0 };
     }
     if (game.winner === game.username) {
-      leaderboard[game.username].wins++;
+      stats[game.username].wins++;
     } else if (game.winner === null) {
-      leaderboard[game.username].ties++;
+      stats[game.username].ties++;
     } else {
-      leaderboard[game.username].losses++;
+      stats[game.username].losses++;
     }
   });
 
-  // Convert to array and calculate win rates
-  const leaderboardArray = Object.entries(leaderboard).map(
-    ([username, stats]) => {
-      const totalGames = stats.wins + stats.losses + stats.ties;
-      const winRate = totalGames > 0 ? (stats.wins / totalGames) * 100 : 0;
-      return { username, ...stats, winRate };
-    },
-  );
+  const leaderboard = Object.entries(stats)
+    .map(([username, data]) => {
+      const total = data.wins + data.losses + data.ties;
+      const winRate = total > 0 ? (data.wins / total) * 100 : 0;
+      return {
+        username,
+        wins: data.wins,
+        losses: data.losses,
+        ties: data.ties,
+        winRate,
+      };
+    })
+    .sort((a, b) => b.winRate - a.winRate);
 
-  // Sort by win rate (descending)
-  leaderboardArray.sort((a, b) => b.winRate - a.winRate);
-
-  res.json(leaderboardArray);
+  res.json(leaderboard);
 });
 
-// AI Stats endpoint
 app.get("/ai-stats", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in." });
   }
   const games = readGames();
-
-  // Filter AI games (where difficulty and personality exist)
   const aiGames = games.filter((game) => game.difficulty && game.personality);
 
   // Difficulty stats
@@ -377,13 +321,10 @@ app.get("/ai-stats", (req, res) => {
       difficultyStats[game.difficulty] = { wins: 0, losses: 0, ties: 0 };
     }
     if (game.winner === "O") {
-      // AI won
       difficultyStats[game.difficulty].wins++;
     } else if (game.winner === game.username) {
-      // Human won
       difficultyStats[game.difficulty].losses++;
     } else {
-      // Tie
       difficultyStats[game.difficulty].ties++;
     }
   });
@@ -395,41 +336,45 @@ app.get("/ai-stats", (req, res) => {
       personalityStats[game.personality] = { wins: 0, losses: 0, ties: 0 };
     }
     if (game.winner === "O") {
-      // AI won
       personalityStats[game.personality].wins++;
     } else if (game.winner === game.username) {
-      // Human won
       personalityStats[game.personality].losses++;
     } else {
-      // Tie
       personalityStats[game.personality].ties++;
     }
   });
 
-  // Convert to arrays with win rates
   const difficultyArray = Object.entries(difficultyStats).map(
-    ([difficulty, stats]) => {
-      const total = stats.wins + stats.losses + stats.ties;
-      const winRate = total > 0 ? (stats.wins / total) * 100 : 0;
-      return { difficulty, ...stats, winRate };
+    ([difficulty, data]) => {
+      const total = data.wins + data.losses + data.ties;
+      const winRate = total > 0 ? (data.wins / total) * 100 : 0;
+      return {
+        difficulty,
+        wins: data.wins,
+        losses: data.losses,
+        ties: data.ties,
+        winRate,
+      };
     },
   );
 
   const personalityArray = Object.entries(personalityStats).map(
-    ([personality, stats]) => {
-      const total = stats.wins + stats.losses + stats.ties;
-      const winRate = total > 0 ? (stats.wins / total) * 100 : 0;
-      return { personality, ...stats, winRate };
+    ([personality, data]) => {
+      const total = data.wins + data.losses + data.ties;
+      const winRate = total > 0 ? (data.wins / total) * 100 : 0;
+      return {
+        personality,
+        wins: data.wins,
+        losses: data.losses,
+        ties: data.ties,
+        winRate,
+      };
     },
   );
 
-  res.json({
-    difficulty: difficultyArray,
-    personality: personalityArray,
-  });
+  res.json({ difficulty: difficultyArray, personality: personalityArray });
 });
 
-// --- End of CP08-stats Endpoints ---
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
