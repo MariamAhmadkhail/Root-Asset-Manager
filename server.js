@@ -104,12 +104,11 @@ app.get("/check-auth", (req, res) => {
   }
 });
 
-// CP05-save endpoints
 app.post("/save-game", (req, res) => {
   if (!req.session.user) {
     return res.status(401).json({ error: "Not logged in." });
   }
-  const { moves, winner } = req.body;
+  const { moves, winner, difficulty, personality } = req.body; // Accept new fields
   if (!moves || !Array.isArray(moves) || moves.length !== 9) {
     return res.status(400).json({ error: "Invalid moves." });
   }
@@ -118,6 +117,8 @@ app.post("/save-game", (req, res) => {
     username: req.session.user.username,
     moves: moves,
     winner: winner || null,
+    difficulty: difficulty || null, // Save difficulty
+    personality: personality || null, // Save personality
     timestamp: new Date().toISOString(),
   };
   games.push(newGame);
@@ -242,7 +243,7 @@ app.post("/ai-move", async (req, res) => {
     return res.status(401).json({ error: "Not logged in." });
   }
 
-  const { moves, difficulty, personality } = req.body; // Now accepts personality
+  const { moves, difficulty, personality = "chill" } = req.body; // Default to "chill" if not provided
   if (!moves || !Array.isArray(moves) || moves.length !== 9) {
     return res.status(400).json({ error: "Invalid moves." });
   }
@@ -320,6 +321,115 @@ app.post("/ai-move", async (req, res) => {
   res.json({ move: aiMove, comment: comment });
 });
 
+// --- CP08-stats: Leaderboard and AI Stats Endpoints ---
+
+// Leaderboard endpoint
+app.get("/leaderboard", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+  const games = readGames();
+  const leaderboard = {};
+
+  // Calculate wins/losses/ties for each player
+  games.forEach((game) => {
+    if (!leaderboard[game.username]) {
+      leaderboard[game.username] = { wins: 0, losses: 0, ties: 0 };
+    }
+    if (game.winner === game.username) {
+      leaderboard[game.username].wins++;
+    } else if (game.winner === null) {
+      leaderboard[game.username].ties++;
+    } else {
+      leaderboard[game.username].losses++;
+    }
+  });
+
+  // Convert to array and calculate win rates
+  const leaderboardArray = Object.entries(leaderboard).map(
+    ([username, stats]) => {
+      const totalGames = stats.wins + stats.losses + stats.ties;
+      const winRate = totalGames > 0 ? (stats.wins / totalGames) * 100 : 0;
+      return { username, ...stats, winRate };
+    },
+  );
+
+  // Sort by win rate (descending)
+  leaderboardArray.sort((a, b) => b.winRate - a.winRate);
+
+  res.json(leaderboardArray);
+});
+
+// AI Stats endpoint
+app.get("/ai-stats", (req, res) => {
+  if (!req.session.user) {
+    return res.status(401).json({ error: "Not logged in." });
+  }
+  const games = readGames();
+
+  // Filter AI games (where difficulty and personality exist)
+  const aiGames = games.filter((game) => game.difficulty && game.personality);
+
+  // Difficulty stats
+  const difficultyStats = {};
+  aiGames.forEach((game) => {
+    if (!difficultyStats[game.difficulty]) {
+      difficultyStats[game.difficulty] = { wins: 0, losses: 0, ties: 0 };
+    }
+    if (game.winner === "O") {
+      // AI won
+      difficultyStats[game.difficulty].wins++;
+    } else if (game.winner === game.username) {
+      // Human won
+      difficultyStats[game.difficulty].losses++;
+    } else {
+      // Tie
+      difficultyStats[game.difficulty].ties++;
+    }
+  });
+
+  // Personality stats
+  const personalityStats = {};
+  aiGames.forEach((game) => {
+    if (!personalityStats[game.personality]) {
+      personalityStats[game.personality] = { wins: 0, losses: 0, ties: 0 };
+    }
+    if (game.winner === "O") {
+      // AI won
+      personalityStats[game.personality].wins++;
+    } else if (game.winner === game.username) {
+      // Human won
+      personalityStats[game.personality].losses++;
+    } else {
+      // Tie
+      personalityStats[game.personality].ties++;
+    }
+  });
+
+  // Convert to arrays with win rates
+  const difficultyArray = Object.entries(difficultyStats).map(
+    ([difficulty, stats]) => {
+      const total = stats.wins + stats.losses + stats.ties;
+      const winRate = total > 0 ? (stats.wins / total) * 100 : 0;
+      return { difficulty, ...stats, winRate };
+    },
+  );
+
+  const personalityArray = Object.entries(personalityStats).map(
+    ([personality, stats]) => {
+      const total = stats.wins + stats.losses + stats.ties;
+      const winRate = total > 0 ? (stats.wins / total) * 100 : 0;
+      return { personality, ...stats, winRate };
+    },
+  );
+
+  res.json({
+    difficulty: difficultyArray,
+    personality: personalityArray,
+  });
+});
+
+// --- End of CP08-stats Endpoints ---
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

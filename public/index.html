@@ -212,6 +212,11 @@
       <!-- Game History Section -->
       <div class="game-history">
         <button id="view-history-btn">View Game History</button>
+        <div class="game-actions">
+          <button id="new-game-btn">New Game</button>
+          <button id="view-stats-btn">View Stats</button>
+          <!-- Add this line -->
+        </div>
         <div id="history-modal" class="hidden">
           <div class="modal-content">
             <h3>Your Game History</h3>
@@ -243,6 +248,21 @@
 
       // Game logic
       function initializeGame() {
+        // Add these with your other variable declarations
+        const viewStatsBtn = document.getElementById("view-stats-btn");
+        const statsContainer = document.getElementById("stats-container");
+        const backToGameBtn = document.getElementById("back-to-game-btn");
+        const leaderboardBtn = document.getElementById("leaderboard-btn");
+        const aiStatsBtn = document.getElementById("ai-stats-btn");
+        const leaderboardContent = document.getElementById(
+          "leaderboard-content",
+        );
+        const aiStatsContent = document.getElementById("ai-stats-content");
+        const leaderboardBody = document.getElementById("leaderboard-body");
+        const aiDifficultyBody = document.getElementById("ai-difficulty-body");
+        const aiPersonalityBody = document.getElementById(
+          "ai-personality-body",
+        );
         const cells = document.querySelectorAll(".cell");
         const statusDisplay = document.getElementById("status");
         const newGameBtn = document.getElementById("new-game-btn");
@@ -250,6 +270,7 @@
         const historyModal = document.getElementById("history-modal");
         const closeHistoryBtn = document.getElementById("close-history-btn");
         const gamesList = document.getElementById("games-list");
+        const gameContainer = document.getElementById("game-container");
         const pvpBtn = document.getElementById("pvp-btn");
         const pvaiBtn = document.getElementById("pvai-btn");
         const difficultySelect = document.getElementById("difficulty");
@@ -325,6 +346,7 @@
               body: JSON.stringify({
                 moves: gameState,
                 difficulty: difficulty,
+                personality: personality, // Add this line
               }),
             })
               .then((response) => response.json())
@@ -380,6 +402,8 @@
             body: JSON.stringify({
               moves: gameState,
               winner: winner,
+              difficulty: gameMode === "pvai" ? difficulty : null, // Save difficulty
+              personality: gameMode === "pvai" ? personality : null, // Save personality
             }),
           })
             .then((response) => response.json())
@@ -420,6 +444,29 @@
               console.error("Error loading game history:", error);
               gamesList.innerHTML = "<p>Error loading game history.</p>";
             });
+          // Stats navigation
+          viewStatsBtn.addEventListener("click", () => {
+            statsContainer.classList.remove("hidden");
+            gameContainer.classList.add("hidden");
+            loadLeaderboard();
+          });
+
+          backToGameBtn.addEventListener("click", () => {
+            statsContainer.classList.add("hidden");
+            gameContainer.classList.remove("hidden");
+          });
+
+          leaderboardBtn.addEventListener("click", () => {
+            leaderboardContent.classList.remove("hidden");
+            aiStatsContent.classList.add("hidden");
+            loadLeaderboard();
+          });
+
+          aiStatsBtn.addEventListener("click", () => {
+            aiStatsContent.classList.remove("hidden");
+            leaderboardContent.classList.add("hidden");
+            loadAIStats();
+          });
         }
 
         // Reset game
@@ -442,9 +489,14 @@
             mode === "pvp" ? "PvP (Human vs Human) ✅" : "PvP (Human vs Human)";
           pvaiBtn.textContent =
             mode === "pvai" ? "PvAI (Human vs AI) ✅" : "PvAI (Human vs AI)";
-          // Enable/disable difficulty and personality selectors based on mode
           difficultySelect.disabled = mode !== "pvai";
           personalitySelect.disabled = mode !== "pvai";
+          console.log(
+            "Game mode set to:",
+            mode,
+            "Personality selector disabled:",
+            personalitySelect.disabled,
+          ); // Debug log
           resetGame();
         }
 
@@ -485,7 +537,90 @@
           console.log("Personality set to:", personality);
           resetGame();
         });
+
+        // Stats navigation
+        viewStatsBtn.addEventListener("click", () => {
+          statsContainer.classList.remove("hidden");
+          gameContainer.classList.add("hidden");
+          loadLeaderboard();
+        });
+
+        backToGameBtn.addEventListener("click", () => {
+          statsContainer.classList.add("hidden");
+          gameContainer.classList.remove("hidden");
+        });
+
+        leaderboardBtn.addEventListener("click", () => {
+          leaderboardContent.classList.remove("hidden");
+          aiStatsContent.classList.add("hidden");
+          loadLeaderboard();
+        });
+
+        aiStatsBtn.addEventListener("click", () => {
+          aiStatsContent.classList.remove("hidden");
+          leaderboardContent.classList.add("hidden");
+          loadAIStats();
+        });
       }
     </script>
+    <!-- Stats Section (hidden by default) -->
+    <div id="stats-container" class="hidden">
+      <h2>Statistics</h2>
+      <div class="stats-tabs">
+        <button id="leaderboard-btn">Leaderboard</button>
+        <button id="ai-stats-btn">AI Stats</button>
+      </div>
+
+      <!-- Leaderboard Content -->
+      <div id="leaderboard-content" class="stats-content">
+        <h3>Player Leaderboard</h3>
+        <table id="leaderboard-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Player</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Ties</th>
+              <th>Win Rate</th>
+            </tr>
+          </thead>
+          <tbody id="leaderboard-body"></tbody>
+        </table>
+      </div>
+
+      <!-- AI Stats Content -->
+      <div id="ai-stats-content" class="stats-content hidden">
+        <h3>AI Performance by Difficulty</h3>
+        <table id="ai-difficulty-table">
+          <thead>
+            <tr>
+              <th>Difficulty</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Ties</th>
+              <th>Win Rate</th>
+            </tr>
+          </thead>
+          <tbody id="ai-difficulty-body"></tbody>
+        </table>
+
+        <h3>AI Performance by Personality</h3>
+        <table id="ai-personality-table">
+          <thead>
+            <tr>
+              <th>Personality</th>
+              <th>Wins</th>
+              <th>Losses</th>
+              <th>Ties</th>
+              <th>Win Rate</th>
+            </tr>
+          </thead>
+          <tbody id="ai-personality-body"></tbody>
+        </table>
+      </div>
+
+      <button id="back-to-game-btn">Back to Game</button>
+    </div>
   </body>
 </html>
