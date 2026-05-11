@@ -7,7 +7,7 @@
     <style>
       body {
         font-family: Arial, sans-serif;
-        max-width: 800px;
+        max-width: 600px;
         margin: 0 auto;
         padding: 20px;
         text-align: center;
@@ -69,6 +69,7 @@
         margin: 0 10px;
         padding: 10px 20px;
       }
+      /* Game mode toggle styles */
       .game-mode-toggle {
         margin: 20px 0;
       }
@@ -76,22 +77,23 @@
         margin: 0 10px;
         padding: 8px 16px;
       }
-      .difficulty-selector,
-      .personality-selector {
+      /* Difficulty selector styles */
+      .difficulty-selector {
         margin: 10px 0;
       }
-      .difficulty-selector select,
-      .personality-selector select {
+      .difficulty-selector select {
         padding: 8px;
         font-size: 16px;
         margin-left: 10px;
       }
+      /* AI comment styles */
       .ai-comment {
         margin: 10px 0;
         font-style: italic;
         color: #555;
         min-height: 20px;
       }
+      /* Game history modal styles */
       .game-history {
         margin: 20px 0;
       }
@@ -126,15 +128,34 @@
         padding: 10px;
         border-bottom: 1px solid #eee;
       }
-      /* Stats page styles */
-      #stats-container {
-        max-width: 800px;
-        margin: 20px auto;
+      /* Stats modal styles */
+      #stats-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+      #stats-modal.hidden {
+        display: none;
+      }
+      #stats-modal .modal-content {
+        background: white;
         padding: 20px;
-        text-align: center;
+        border-radius: 5px;
+        max-width: 80%;
+        max-height: 80%;
+        overflow: auto;
       }
       .stats-tabs {
-        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+        margin-bottom: 20px;
       }
       .stats-tabs button {
         margin: 0 10px;
@@ -157,10 +178,6 @@
       }
       th {
         background-color: #f2f2f2;
-      }
-      #back-to-game-btn {
-        margin: 20px 0;
-        padding: 10px 20px;
       }
     </style>
   </head>
@@ -202,11 +219,12 @@
 
     <!-- Game Board (shown only when logged in) -->
     <div id="game-container" class="game-container hidden">
+      <!-- Game Mode Toggle -->
       <div class="game-mode-toggle">
         <button id="pvp-btn">PvP (Human vs Human)</button>
         <button id="pvai-btn">PvAI (Human vs AI)</button>
       </div>
-
+      <!-- Difficulty selector (for PvAI mode) -->
       <div class="difficulty-selector">
         <label for="difficulty">AI Difficulty:</label>
         <select id="difficulty" disabled>
@@ -216,6 +234,7 @@
         </select>
       </div>
 
+      <!-- Personality selector (for PvAI mode) -->
       <div class="personality-selector">
         <label for="personality">AI Personality:</label>
         <select id="personality" disabled>
@@ -224,10 +243,9 @@
           <option value="chill" selected>Chill</option>
         </select>
       </div>
-
+      <!-- AI comment display -->
       <div class="ai-comment" id="ai-comment"></div>
       <div class="status" id="status">Player X's turn</div>
-
       <div class="board" id="board">
         <div class="cell" data-index="0"></div>
         <div class="cell" data-index="1"></div>
@@ -239,14 +257,16 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
       </div>
-
       <div class="game-actions">
         <button id="new-game-btn">New Game</button>
-        <button id="view-history-btn">View Game History</button>
+      </div>
+      <!-- Stats Button -->
+      <div class="game-actions">
         <button id="view-stats-btn">View Stats</button>
       </div>
-
+      <!-- Game History Section -->
       <div class="game-history">
+        <button id="view-history-btn">View Game History</button>
         <div id="history-modal" class="hidden">
           <div class="modal-content">
             <h3>Your Game History</h3>
@@ -255,66 +275,69 @@
           </div>
         </div>
       </div>
+      <!-- Stats Modal -->
+      <div id="stats-modal" class="hidden">
+        <div class="modal-content">
+          <h3>Stats</h3>
+          <div class="stats-tabs">
+            <button id="leaderboard-tab">Leaderboard</button>
+            <button id="ai-stats-tab">AI Stats</button>
+          </div>
+          <div class="stats-content">
+            <div id="leaderboard-content">
+              <h4>Leaderboard</h4>
+              <table id="leaderboard-table">
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Player</th>
+                    <th>Wins</th>
+                    <th>Ties</th>
+                    <th>Losses</th>
+                    <th>Total Games</th>
+                  </tr>
+                </thead>
+                <tbody id="leaderboard-body"></tbody>
+              </table>
+            </div>
+            <div id="ai-stats-content" class="hidden">
+              <h4>AI Stats</h4>
+              <h5>By Difficulty</h5>
+              <table id="ai-difficulty-table">
+                <thead>
+                  <tr>
+                    <th>Difficulty</th>
+                    <th>Wins</th>
+                    <th>Ties</th>
+                    <th>Losses</th>
+                    <th>Total</th>
+                    <th>Win Rate (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="ai-difficulty-body"></tbody>
+              </table>
+              <h5>By Personality</h5>
+              <table id="ai-personality-table">
+                <thead>
+                  <tr>
+                    <th>Personality</th>
+                    <th>Wins</th>
+                    <th>Ties</th>
+                    <th>Losses</th>
+                    <th>Total</th>
+                    <th>Win Rate (%)</th>
+                  </tr>
+                </thead>
+                <tbody id="ai-personality-body"></tbody>
+              </table>
+            </div>
+          </div>
+          <button id="close-stats-btn">Close</button>
+        </div>
+      </div>
     </div>
 
-    <!-- Stats Section -->
-    <div id="stats-container" class="hidden">
-      <h2>Statistics</h2>
-      <div class="stats-tabs">
-        <button id="leaderboard-btn">Leaderboard</button>
-        <button id="ai-stats-btn">AI Stats</button>
-      </div>
-
-      <div id="leaderboard-content" class="stats-content">
-        <h3>Player Leaderboard</h3>
-        <table id="leaderboard-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Player</th>
-              <th>Wins</th>
-              <th>Losses</th>
-              <th>Ties</th>
-              <th>Win Rate</th>
-            </tr>
-          </thead>
-          <tbody id="leaderboard-body"></tbody>
-        </table>
-      </div>
-
-      <div id="ai-stats-content" class="stats-content hidden">
-        <h3>AI Performance by Difficulty</h3>
-        <table id="ai-difficulty-table">
-          <thead>
-            <tr>
-              <th>Difficulty</th>
-              <th>Wins</th>
-              <th>Losses</th>
-              <th>Ties</th>
-              <th>Win Rate</th>
-            </tr>
-          </thead>
-          <tbody id="ai-difficulty-body"></tbody>
-        </table>
-
-        <h3>AI Performance by Personality</h3>
-        <table id="ai-personality-table">
-          <thead>
-            <tr>
-              <th>Personality</th>
-              <th>Wins</th>
-              <th>Losses</th>
-              <th>Ties</th>
-              <th>Win Rate</th>
-            </tr>
-          </thead>
-          <tbody id="ai-personality-body"></tbody>
-        </table>
-      </div>
-
-      <button id="back-to-game-btn">Back to Game</button>
-    </div>
-
+    <!-- Client-side script -->
     <script>
       // Check auth status
       fetch("/check-auth")
@@ -333,6 +356,7 @@
           }
         });
 
+      // Game logic
       function initializeGame() {
         const cells = document.querySelectorAll(".cell");
         const statusDisplay = document.getElementById("status");
@@ -344,14 +368,15 @@
         const pvpBtn = document.getElementById("pvp-btn");
         const pvaiBtn = document.getElementById("pvai-btn");
         const difficultySelect = document.getElementById("difficulty");
-        const personalitySelect = document.getElementById("personality");
         const aiCommentDisplay = document.getElementById("ai-comment");
-        const gameContainer = document.getElementById("game-container");
+        const personalitySelect = document.getElementById("personality");
+
+        // Stats modal elements
         const viewStatsBtn = document.getElementById("view-stats-btn");
-        const statsContainer = document.getElementById("stats-container");
-        const backToGameBtn = document.getElementById("back-to-game-btn");
-        const leaderboardBtn = document.getElementById("leaderboard-btn");
-        const aiStatsBtn = document.getElementById("ai-stats-btn");
+        const statsModal = document.getElementById("stats-modal");
+        const closeStatsBtn = document.getElementById("close-stats-btn");
+        const leaderboardTab = document.getElementById("leaderboard-tab");
+        const aiStatsTab = document.getElementById("ai-stats-tab");
         const leaderboardContent = document.getElementById(
           "leaderboard-content",
         );
@@ -363,13 +388,14 @@
         );
 
         let currentPlayer = "X";
-        let gameState = ["", "", "", "", "", "", "", "", ""];
+        let gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
         let gameActive = true;
         let gameMode = "pvp";
         let isAITurn = false;
         let difficulty = "medium";
         let personality = "chill";
 
+        // Win conditions
         const winConditions = [
           [0, 1, 2],
           [3, 4, 5],
@@ -381,9 +407,11 @@
           [2, 4, 6],
         ];
 
+        // Handle cell click
         function handleCellClick(e) {
           if (
             !historyModal.classList.contains("hidden") ||
+            !statsModal.classList.contains("hidden") ||
             !gameActive ||
             isAITurn
           ) {
@@ -414,9 +442,11 @@
             return;
           }
 
+          // Switch player
           currentPlayer = currentPlayer === "X" ? "O" : "X";
           statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
 
+          // If in PvAI mode and it's O's turn, let AI move
           if (gameMode === "pvai" && currentPlayer === "O" && gameActive) {
             isAITurn = true;
             statusDisplay.textContent = "AI is thinking...";
@@ -427,7 +457,6 @@
               body: JSON.stringify({
                 moves: gameState,
                 difficulty: difficulty,
-                personality: personality,
               }),
             })
               .then((response) => response.json())
@@ -461,16 +490,21 @@
           }
         }
 
+        // Check for win
         function checkWin() {
-          return winConditions.some((condition) =>
-            condition.every((index) => gameState[index] === currentPlayer),
-          );
+          return winConditions.some((condition) => {
+            return condition.every((index) => {
+              return gameState[index] === currentPlayer;
+            });
+          });
         }
 
+        // Check for tie
         function checkTie() {
           return !gameState.includes("");
         }
 
+        // Save game to server
         function saveGame(winner) {
           fetch("/save-game", {
             method: "POST",
@@ -481,137 +515,174 @@
               difficulty: gameMode === "pvai" ? difficulty : null,
               personality: gameMode === "pvai" ? personality : null,
             }),
-          }).catch(console.error);
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Game saved:", data);
+            })
+            .catch((error) => {
+              console.error("Error saving game:", error);
+            });
         }
 
+        // Load and display game history
         function loadGameHistory() {
           fetch("/user-games")
-            .then((res) => res.json())
+            .then((response) => response.json())
             .then((games) => {
-              gamesList.innerHTML =
-                games.length === 0
-                  ? "<p>No games played yet.</p>"
-                  : games
-                      .map(
-                        (game, i) => `
-                  <div class="game-item">
-                    <p><strong>Game ${i + 1}</strong> - ${new Date(game.timestamp).toLocaleString()}</p>
-                    <p>${game.winner ? `Winner: ${game.winner}` : "Tie"}</p>
-                  </div>
-                `,
-                      )
-                      .join("");
+              gamesList.innerHTML = "";
+              if (games.length === 0) {
+                gamesList.innerHTML = "<p>No games played yet.</p>";
+                return;
+              }
+              games.forEach((game, index) => {
+                const gameItem = document.createElement("div");
+                gameItem.className = "game-item";
+                const winnerText = game.winner
+                  ? `Winner: ${game.winner}`
+                  : "Tie";
+                const date = new Date(game.timestamp).toLocaleString();
+                gameItem.innerHTML = `
+                <p><strong>Game ${index + 1}</strong> - ${date}</p>
+                <p>${winnerText}</p>
+                <p>Moves: ${game.moves.join(", ")}</p>
+              `;
+                gamesList.appendChild(gameItem);
+              });
             })
-            .catch(console.error);
+            .catch((error) => {
+              console.error("Error loading game history:", error);
+              gamesList.innerHTML = "<p>Error loading game history.</p>";
+            });
         }
 
+        // Load and display leaderboard
+        function loadLeaderboard() {
+          fetch("/stats/leaderboard")
+            .then((response) => response.json())
+            .then((leaderboard) => {
+              leaderboardBody.innerHTML = "";
+              if (leaderboard.length === 0) {
+                leaderboardBody.innerHTML =
+                  "<tr><td colspan='6'>No data available.</td></tr>";
+                return;
+              }
+              leaderboard.forEach((player, index) => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${index + 1}</td>
+                  <td>${player.username}</td>
+                  <td>${player.wins}</td>
+                  <td>${player.ties}</td>
+                  <td>${player.losses}</td>
+                  <td>${player.totalGames}</td>
+                `;
+                leaderboardBody.appendChild(row);
+              });
+            })
+            .catch((error) => {
+              console.error("Error loading leaderboard:", error);
+              leaderboardBody.innerHTML =
+                "<tr><td colspan='6'>Error loading leaderboard.</td></tr>";
+            });
+        }
+
+        // Load and display AI stats
+        function loadAIStats() {
+          fetch("/stats/ai")
+            .then((response) => response.json())
+            .then((aiStats) => {
+              aiDifficultyBody.innerHTML = "";
+              aiPersonalityBody.innerHTML = "";
+
+              for (const [difficulty, stats] of Object.entries(
+                aiStats.difficulty,
+              )) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${difficulty}</td>
+                  <td>${stats.wins}</td>
+                  <td>${stats.ties}</td>
+                  <td>${stats.losses}</td>
+                  <td>${stats.total}</td>
+                  <td>${stats.winRate.toFixed(2)}</td>
+                `;
+                aiDifficultyBody.appendChild(row);
+              }
+
+              for (const [personality, stats] of Object.entries(
+                aiStats.personality,
+              )) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                  <td>${personality}</td>
+                  <td>${stats.wins}</td>
+                  <td>${stats.ties}</td>
+                  <td>${stats.losses}</td>
+                  <td>${stats.total}</td>
+                  <td>${stats.winRate.toFixed(2)}</td>
+                `;
+                aiPersonalityBody.appendChild(row);
+              }
+            })
+            .catch((error) => {
+              console.error("Error loading AI stats:", error);
+              aiDifficultyBody.innerHTML =
+                "<tr><td colspan='6'>Error loading AI stats.</td></tr>";
+              aiPersonalityBody.innerHTML =
+                "<tr><td colspan='6'>Error loading AI stats.</td></tr>";
+            });
+        }
+
+        // Reset game
         function resetGame() {
-          gameState = ["", "", "", "", "", "", "", "", ""];
+          gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
           currentPlayer = "X";
           gameActive = true;
           isAITurn = false;
-          cells.forEach((cell) => (cell.textContent = ""));
+          cells.forEach((cell) => {
+            cell.textContent = "";
+          });
           statusDisplay.textContent = `Player ${currentPlayer}'s turn`;
           aiCommentDisplay.textContent = "";
         }
 
+        // Set game mode
         function setGameMode(mode) {
           gameMode = mode;
           pvpBtn.textContent =
             mode === "pvp" ? "PvP (Human vs Human) ✅" : "PvP (Human vs Human)";
           pvaiBtn.textContent =
             mode === "pvai" ? "PvAI (Human vs AI) ✅" : "PvAI (Human vs AI)";
+          // Enable/disable difficulty and personality selectors based on mode
           difficultySelect.disabled = mode !== "pvai";
           personalitySelect.disabled = mode !== "pvai";
           resetGame();
         }
 
-        // Stats functions
-        function loadLeaderboard() {
-          fetch("/leaderboard")
-            .then((res) => res.json())
-            .then((leaderboard) => {
-              leaderboardBody.innerHTML =
-                leaderboard.length === 0
-                  ? "<tr><td colspan='6'>No games played yet</td></tr>"
-                  : leaderboard
-                      .map(
-                        (player, i) => `
-                  <tr>
-                    <td>${i + 1}</td>
-                    <td>${player.username}</td>
-                    <td>${player.wins}</td>
-                    <td>${player.losses}</td>
-                    <td>${player.ties}</td>
-                    <td>${player.winRate.toFixed(1)}%</td>
-                  </tr>
-                `,
-                      )
-                      .join("");
-            })
-            .catch(console.error);
-        }
-
-        function loadAIStats() {
-          fetch("/ai-stats")
-            .then((res) => res.json())
-            .then((stats) => {
-              // Difficulty stats
-              aiDifficultyBody.innerHTML =
-                stats.difficulty.length === 0
-                  ? "<tr><td colspan='5'>No AI games played yet</td></tr>"
-                  : stats.difficulty
-                      .map(
-                        (diff) => `
-                  <tr>
-                    <td>${diff.difficulty}</td>
-                    <td>${diff.wins}</td>
-                    <td>${diff.losses}</td>
-                    <td>${diff.ties}</td>
-                    <td>${diff.winRate.toFixed(1)}%</td>
-                  </tr>
-                `,
-                      )
-                      .join("");
-
-              // Personality stats
-              aiPersonalityBody.innerHTML =
-                stats.personality.length === 0
-                  ? "<tr><td colspan='5'>No AI games played yet</td></tr>"
-                  : stats.personality
-                      .map(
-                        (pers) => `
-                  <tr>
-                    <td>${pers.personality}</td>
-                    <td>${pers.wins}</td>
-                    <td>${pers.losses}</td>
-                    <td>${pers.ties}</td>
-                    <td>${pers.winRate.toFixed(1)}%</td>
-                  </tr>
-                `,
-                      )
-                      .join("");
-            })
-            .catch(console.error);
-        }
-
-        // Event listeners
-        cells.forEach((cell) =>
-          cell.addEventListener("click", handleCellClick),
-        );
+        // Add event listeners
+        cells.forEach((cell) => {
+          cell.addEventListener("click", handleCellClick);
+        });
         newGameBtn.addEventListener("click", resetGame);
         viewHistoryBtn.addEventListener("click", () => {
           historyModal.classList.remove("hidden");
           loadGameHistory();
         });
-        closeHistoryBtn.addEventListener("click", () =>
-          historyModal.classList.add("hidden"),
-        );
-        historyModal.addEventListener("click", (e) => {
-          if (e.target === historyModal) historyModal.classList.add("hidden");
+        closeHistoryBtn.addEventListener("click", () => {
+          historyModal.classList.add("hidden");
         });
-        pvpBtn.addEventListener("click", () => setGameMode("pvp"));
-        pvaiBtn.addEventListener("click", () => setGameMode("pvai"));
+        historyModal.addEventListener("click", (e) => {
+          if (e.target === historyModal) {
+            historyModal.classList.add("hidden");
+          }
+        });
+        pvpBtn.addEventListener("click", () => {
+          setGameMode("pvp");
+        });
+        pvaiBtn.addEventListener("click", () => {
+          setGameMode("pvai");
+        });
         difficultySelect.addEventListener("change", () => {
           difficulty = difficultySelect.value;
           resetGame();
@@ -621,24 +692,27 @@
           resetGame();
         });
 
-        // Stats navigation
+        // Stats modal event listeners
         viewStatsBtn.addEventListener("click", () => {
-          statsContainer.classList.remove("hidden");
-          gameContainer.classList.add("hidden");
+          statsModal.classList.remove("hidden");
           loadLeaderboard();
         });
-        backToGameBtn.addEventListener("click", () => {
-          statsContainer.classList.add("hidden");
-          gameContainer.classList.remove("hidden");
+        closeStatsBtn.addEventListener("click", () => {
+          statsModal.classList.add("hidden");
         });
-        leaderboardBtn.addEventListener("click", () => {
+        statsModal.addEventListener("click", (e) => {
+          if (e.target === statsModal) {
+            statsModal.classList.add("hidden");
+          }
+        });
+        leaderboardTab.addEventListener("click", () => {
           leaderboardContent.classList.remove("hidden");
           aiStatsContent.classList.add("hidden");
           loadLeaderboard();
         });
-        aiStatsBtn.addEventListener("click", () => {
-          aiStatsContent.classList.remove("hidden");
+        aiStatsTab.addEventListener("click", () => {
           leaderboardContent.classList.add("hidden");
+          aiStatsContent.classList.remove("hidden");
           loadAIStats();
         });
       }
