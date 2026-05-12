@@ -230,17 +230,28 @@ app.post("/ai-move", async (req, res) => {
     }
 
     const { message, personality = "chill" } = req.body;
+    console.log("Chat request received:", { message, personality }); // Debug log
+
+    if (!message) {
+      return res.status(400).json({ error: "Message is required." });
+    }
 
     try {
-      // Set up personality-based system prompt
-      let systemPrompt = "You are a Tic Tac Toe AI assistant. Respond in 1-2 short, engaging sentences.";
-      if (personality === "aggressive") {
-        systemPrompt = "You are an aggressive Tic Tac Toe AI. Respond with short, competitive messages.";
-      } else if (personality === "defensive") {
-        systemPrompt = "You are a defensive Tic Tac Toe AI. Respond with cautious, strategic messages.";
-      } else if (personality === "chill") {
-        systemPrompt = "You are a chill Tic Tac Toe AI. Respond with relaxed, friendly messages.";
-      }
+      // Personality-specific system prompts
+      const personalityPrompts = {
+        aggressive:
+          "You are an aggressive, competitive Tic Tac Toe AI. Respond in short, bold, and confident messages (1-2 sentences max).",
+        defensive:
+          "You are a defensive, cautious Tic Tac Toe AI. Respond in short, strategic, and thoughtful messages (1-2 sentences max).",
+        chill:
+          "You are a chill, relaxed Tic Tac Toe AI. Respond in short, friendly, and casual messages (1-2 sentences max).",
+      };
+
+      const systemPrompt =
+        personalityPrompts[personality] ||
+        "You are a Tic Tac Toe AI. Respond in 1-2 short sentences.";
+
+      console.log("Using system prompt:", systemPrompt); // Debug log
 
       const response = await groq.chat.completions.create({
         messages: [
@@ -258,11 +269,17 @@ app.post("/ai-move", async (req, res) => {
         max_tokens: 50,
       });
 
-      const aiResponse = response.choices[0].message.content.trim();
+      const aiResponse =
+        response.choices[0]?.message?.content?.trim() ||
+        "Sorry, I didn't understand that.";
+      console.log("AI response:", aiResponse); // Debug log
+
       res.json({ response: aiResponse });
     } catch (error) {
       console.error("Groq chat error:", error);
-      res.status(500).json({ error: "Failed to get AI response." });
+      res
+        .status(500)
+        .json({ response: "Sorry, I'm having trouble responding right now." });
     }
   });
 
