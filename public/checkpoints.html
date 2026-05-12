@@ -358,6 +358,46 @@
         better for this use case.
       </p>
     </div>
+    <!-- CP10 -->
+    <div class="checkpoint">
+      <h2>CP10-c2: Chat with AI</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/YOUR_COMMIT_HASH"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Added a chat feature that allows players
+        to communicate with the AI during PvAI and AI vs AI games. The AI
+        responds based on its selected personality (Aggressive, Defensive, or
+        Chill) using the Groq API.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Initially, the AI kept responding with
+        "Sorry, I didn't understand that" because the personality parameter
+        wasn't being passed correctly to the backend. Fixed by properly
+        formatting the system prompts for each personality type.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would add a "Clear Chat"
+        button to let users reset the conversation, and maybe save chat history
+        to localStorage so it persists between page refreshes.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> Used AI to help design the chat UI
+        layout and craft personality-specific system prompts for the Groq API.
+        Also used AI to debug the endpoint when responses weren't working.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried different prompt styles (short
+        vs. long, strict vs. loose instructions) and found that short,
+        personality-specific prompts worked best for getting consistent,
+        on-brand responses.
+      </p>
+    </div>
 
     <div class="back-link">
       <a href="/">← Back to Tic Tac Toe AI</a>
