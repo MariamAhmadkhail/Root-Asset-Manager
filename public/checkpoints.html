@@ -2,334 +2,326 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Tic Tac Toe AI</title>
+    <title>Checkpoints - Tic Tac Toe AI</title>
     <link href="/styles.css" rel="stylesheet" />
     <style>
       body {
         font-family: Arial, sans-serif;
-        max-width: 600px;
+        max-width: 800px;
         margin: 0 auto;
         padding: 20px;
+        text-align: left;
+      }
+      h1 {
         text-align: center;
       }
-      form {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        margin: 20px 0;
-      }
-      input,
-      button {
-        padding: 8px;
-        font-size: 16px;
-      }
-      button {
-        cursor: pointer;
-      }
-      .user-info {
-        margin: 20px 0;
-      }
-      .hidden {
-        display: none;
-      }
-      .game-container {
-        margin: 20px auto;
-        max-width: 300px;
-      }
-      .board {
-        display: grid;
-        grid-template-columns: repeat(3, 100px);
-        grid-template-rows: repeat(3, 100px);
-        gap: 5px;
-        margin: 20px auto;
-      }
-      .cell {
-        width: 100px;
-        height: 100px;
-        background-color: #f0f0f0;
-        border: 2px solid #333;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 48px;
-        cursor: pointer;
-      }
-      .cell:hover {
-        background-color: #e0e0e0;
-      }
-      .status {
-        margin: 20px 0;
-        font-size: 20px;
-        font-weight: bold;
-      }
-      .game-actions {
-        margin: 20px 0;
-      }
-      .game-actions button {
-        margin: 0 10px;
-        padding: 10px 20px;
-      }
-      /* Game mode toggle styles */
-      .game-mode-toggle {
-        margin: 20px 0;
-      }
-      .game-mode-toggle button {
-        margin: 0 10px;
-        padding: 8px 16px;
-      }
-      /* Difficulty selector styles */
-      .difficulty-selector {
-        margin: 10px 0;
-      }
-      .difficulty-selector select {
-        padding: 8px;
-        font-size: 16px;
-        margin-left: 10px;
-      }
-      /* AI comment styles */
-      .ai-comment {
-        margin: 10px 0;
-        font-style: italic;
-        color: #555;
-        min-height: 20px;
-      }
-      /* Game history modal styles */
-      .game-history {
-        margin: 20px 0;
-      }
-      #history-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-      #history-modal.hidden {
-        display: none;
-      }
-      #history-modal .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-        max-width: 80%;
-        max-height: 80%;
-        overflow: auto;
-      }
-      #games-list {
-        margin: 10px 0;
-      }
-      #games-list .game-item {
-        margin: 10px 0;
-        padding: 10px;
-        border-bottom: 1px solid #eee;
-      }
-      /* Stats modal styles */
-      #stats-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 1000;
-      }
-      #stats-modal.hidden {
-        display: none;
-      }
-      #stats-modal .modal-content {
-        background: white;
-        padding: 20px;
-        border-radius: 5px;
-        max-width: 80%;
-        max-height: 80%;
-        overflow: auto;
-      }
-      .stats-tabs {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 20px;
-      }
-      .stats-tabs button {
-        margin: 0 10px;
-        padding: 8px 16px;
-        cursor: pointer;
-      }
-      .stats-content {
-        margin: 20px 0;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 10px 0;
-      }
-      th,
-      td {
+      .checkpoint {
+        margin-bottom: 30px;
+        padding: 15px;
         border: 1px solid #ddd;
-        padding: 8px;
-        text-align: center;
+        border-radius: 5px;
+        background-color: #f9f9f9;
       }
-      th {
-        background-color: #f2f2f2;
+      .checkpoint h2 {
+        margin-top: 0;
+        color: #333;
+      }
+      .checkpoint p {
+        margin: 8px 0;
+      }
+      a {
+        color: #0066cc;
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      .back-link {
+        display: block;
+        text-align: center;
+        margin: 20px 0;
       }
     </style>
   </head>
   <body>
-    <h1>Tic Tac Toe AI</h1>
+    <h1>Tic Tac Toe AI - Checkpoints</h1>
 
-    <!-- Welcome message (hidden by default) -->
-    <div class="user-info hidden" id="welcome-message">
-      <p>Welcome, <span id="username"></span>!</p>
-      <a href="/logout" id="logout-link">Logout</a>
+    <!-- CP01 -->
+    <div class="checkpoint">
+      <h2>CP01-world: Basic App Setup</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/60ac972"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Set up the project with Node.js, Express,
+        and the basic file structure. Added a "Hello World" route to test the
+        server.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Understanding how to structure the
+        project and configure Express for the first time.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would add more comments to
+        explain the purpose of each file and folder.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> Used AI to help set up the initial
+        Express server and file structure.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried different folder structures but
+        settled on the one recommended in the project brief.
+      </p>
     </div>
 
-    <!-- Auth forms (shown by default) -->
-    <div id="auth-forms">
-      <h2>Register</h2>
-      <form action="/register" method="POST">
-        <input name="username" type="text" placeholder="Username" required />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Register</button>
-      </form>
-
-      <h2>Login</h2>
-      <form action="/login" method="POST">
-        <input name="username" type="text" placeholder="Username" required />
-        <input
-          name="password"
-          type="password"
-          placeholder="Password"
-          required
-        />
-        <button type="submit">Login</button>
-      </form>
+    <!-- CP02 -->
+    <div class="checkpoint">
+      <h2>CP02-accounts: Register and Login</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/YOUR_COMMIT_HASH_2"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Added user registration and login
+        functionality. Users can sign up, log in, and log out. User data is
+        stored in users.json.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Handling sessions with express-session
+        and ensuring the user stays logged in across page refreshes.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would use a more secure
+        method for storing passwords (even though the brief allows plaintext for
+        learning purposes).
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me understand how to use
+        express-session for managing login sessions.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried storing user data in different
+        formats but settled on an array of objects in users.json.
+      </p>
     </div>
 
-    <!-- Game Board (shown only when logged in) -->
-    <div id="game-container" class="game-container hidden">
-      <!-- Game Mode Toggle -->
-      <div class="game-mode-toggle">
-        <button id="pvp-btn">PvP (Human vs Human)</button>
-        <button id="pvai-btn">PvAI (Human vs AI)</button>
-      </div>
-      <!-- Difficulty selector (for PvAI mode) -->
-      <div class="difficulty-selector">
-        <label for="difficulty">AI Difficulty:</label>
-        <select id="difficulty" disabled>
-          <option value="easy">Easy (Random)</option>
-          <option value="medium" selected>Medium (Smart)</option>
-          <option value="hard">Hard (Groq)</option>
-        </select>
-      </div>
+    <!-- CP03 -->
+    <div class="checkpoint">
+      <h2>CP03-game: Game Board UI</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/YOUR_COMMIT_HASH_3"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Created a 3x3 grid for the Tic Tac Toe
+        board. Cells respond to clicks, and the turn indicator updates between X
+        and O.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Making sure the board rendered correctly
+        and handled clicks properly.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would use CSS Grid from the
+        start instead of experimenting with flexbox for the board layout.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me with the CSS for the grid
+        layout and event handling for cell clicks.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried using flexbox first for the
+        board but switched to CSS Grid for better alignment and simplicity.
+      </p>
+    </div>
 
-      <!-- Personality selector (for PvAI mode) -->
-      <div class="personality-selector">
-        <label for="personality">AI Personality:</label>
-        <select id="personality" disabled>
-          <option value="aggressive">Aggressive</option>
-          <option value="defensive">Defensive</option>
-          <option value="chill" selected>Chill</option>
-        </select>
-      </div>
-      <!-- AI comment display -->
-      <div class="ai-comment" id="ai-comment"></div>
-      <div class="status" id="status">Player X's turn</div>
-      <div class="board" id="board">
-        <div class="cell" data-index="0"></div>
-        <div class="cell" data-index="1"></div>
-        <div class="cell" data-index="2"></div>
-        <div class="cell" data-index="3"></div>
-        <div class="cell" data-index="4"></div>
-        <div class="cell" data-index="5"></div>
-        <div class="cell" data-index="6"></div>
-        <div class="cell" data-index="7"></div>
-        <div class="cell" data-index="8"></div>
-      </div>
-      <div class="game-actions">
-        <button id="new-game-btn">New Game</button>
-      </div>
-      <!-- Stats Button -->
-      <div class="game-actions">
-        <button id="view-stats-btn">View Stats</button>
-      </div>
-      <!-- Game History Section -->
-      <div class="game-history">
-        <button id="view-history-btn">View Game History</button>
-        <div id="history-modal" class="hidden">
-          <div class="modal-content">
-            <h3>Your Game History</h3>
-            <div id="games-list"></div>
-            <button id="close-history-btn">Close</button>
-          </div>
-        </div>
-      </div>
-      <!-- Stats Modal -->
-      <div id="stats-modal" class="hidden">
-        <div class="modal-content">
-          <h3>Stats</h3>
-          <div class="stats-tabs">
-            <button id="leaderboard-tab">Leaderboard</button>
-            <button id="ai-stats-tab">AI Stats</button>
-          </div>
-          <div class="stats-content">
-            <div id="leaderboard-content">
-              <h4>Leaderboard</h4>
-              <table id="leaderboard-table">
-                <thead>
-                  <tr>
-                    <th>Rank</th>
-                    <th>Player</th>
-                    <th>Wins</th>
-                    <th>Ties</th>
-                    <th>Losses</th>
-                    <th>Total Games</th>
-                  </tr>
-                </thead>
-                <tbody id="leaderboard-body"></tbody>
-              </table>
-            </div>
-            <div id="ai-stats-content" class="hidden">
-              <h4>AI Stats</h4>
-              <h5>By Difficulty</h5>
-              <table id="ai-difficulty-table">
-                <thead>
-                  <tr>
-                    <th>Difficulty</th>
-                    <th>Wins</th>
-                    <th>Ties</th>
-                    <th>Losses</th>
-                    <th>Total</th>
-                    <th>Win Rate (%)</th>
-                  </tr>
-                </thead>
-                <tbody id="ai-difficulty-body"></tbody>
-              </table>
-              <h5>By Personality</h5>
-              <table id="ai-personality-table">
-                <thead>
-                  <tr>
-                    <th>Personality</th>
-                    <th>Wins</th>
-                    <th>Ties</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-          </div>
-        </div>
-      </div>
+    <!-- CP04 -->
+    <div class="checkpoint">
+      <h2>CP04-pvp: Human vs Human</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/YOUR_COMMIT_HASH_4"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Implemented full PvP gameplay. Two
+        players can take turns, and the game detects wins and ties.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Writing the win detection logic was
+        challenging at first.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would write a helper
+        function for win detection earlier to keep the code cleaner.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me debug the win detection
+        logic.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried checking wins after every move
+        and also at the end of the game, but the first approach worked better.
+      </p>
+    </div>
+
+    <!-- CP05 -->
+    <div class="checkpoint">
+      <h2>CP05-save: Save Games</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/0422739"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Added functionality to save finished
+        games to games.json. Players can view their game history in a modal.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Ensuring the game state was saved
+        correctly and could be loaded and displayed later.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would add timestamps to each
+        game in a more readable format for the user.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me structure the game data in
+        JSON format.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried saving the entire game state
+        vs. just the moves and winner, but settled on the latter.
+      </p>
+    </div>
+
+    <!-- CP06 -->
+    <div class="checkpoint">
+      <h2>CP06-ai: Groq Wired Up</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/60ac972"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Integrated the Groq API to allow the AI
+        to make moves. Added a toggle for PvP vs. PvAI modes.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Getting the Groq API to return valid
+        moves and handling errors when the API fails.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would add more error
+        handling for API failures and fallback logic for invalid moves.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me format the prompts for the
+        Groq API to get the best responses.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried different prompt formats and
+        settled on one that returned only the move number.
+      </p>
+    </div>
+
+    <!-- CP07 -->
+    <div class="checkpoint">
+      <h2>CP07-levels: Difficulty and Personality</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/2baea48"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Added three difficulty levels (Easy,
+        Medium, Hard) and three personalities (Aggressive, Defensive, Chill).
+        The AI now returns moves and comments as structured JSON.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Balancing the difficulty levels so they
+        felt distinct.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would add more variety to
+        the AI comments and make the personalities more distinct in their
+        behavior.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> AI helped me design the difficulty logic
+        and personality comments.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried different AI models for the
+        Hard difficulty but settled on llama3-8b-instant.
+      </p>
+    </div>
+
+    <!-- CP08 -->
+    <div class="checkpoint">
+      <h2>CP08-stats: Leaderboard and AI Stats</h2>
+      <p>
+        <strong>GitHub Commit:</strong>
+        <a
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/3c12543"
+          target="_blank"
+          >Link</a
+        >
+      </p>
+      <p>
+        <strong>What I built:</strong> Added backend endpoints
+        (/stats/leaderboard and /stats/ai) to calculate and return player and AI
+        stats. Created a frontend modal to display leaderboard and AI win rates
+        by difficulty and personality.
+      </p>
+      <p>
+        <strong>What was hard:</strong> Initially, the leaderboard logic
+        miscounted wins/losses because it didn’t account for the player’s symbol
+        (X or O). Fixed by assuming the human player is always X and the AI is
+        O.
+      </p>
+      <p>
+        <strong>What I'd do differently:</strong> I would store the player’s
+        symbol (X or O) in games.json to avoid assumptions in the stats logic.
+      </p>
+      <p>
+        <strong>AI usage note:</strong> Used AI to help design the stats logic
+        and frontend tables, but manually verified the calculations.
+      </p>
+      <p>
+        <strong>A/B testing note:</strong> Tried displaying stats in a single
+        table first, but switched to tabs for better readability.
+      </p>
+    </div>
+
+    <div class="back-link">
+      <a href="/">← Back to Tic Tac Toe AI</a>
     </div>
   </body>
 </html>

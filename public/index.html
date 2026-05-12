@@ -188,6 +188,8 @@
     <div class="user-info hidden" id="welcome-message">
       <p>Welcome, <span id="username"></span>!</p>
       <a href="/logout" id="logout-link">Logout</a>
+      <br />
+      <a href="/checkpoints.html">View Checkpoints</a>
     </div>
 
     <!-- Auth forms (shown by default) -->
@@ -223,10 +225,11 @@
       <div class="game-mode-toggle">
         <button id="pvp-btn">PvP (Human vs Human)</button>
         <button id="pvai-btn">PvAI (Human vs AI)</button>
+        <button id="aivsai-btn">AI vs AI</button>
       </div>
-      <!-- Difficulty selector (for PvAI mode) -->
+      <!-- Difficulty selector (for PvAI and AI vs AI mode) -->
       <div class="difficulty-selector">
-        <label for="difficulty">AI Difficulty:</label>
+        <label for="difficulty">AI 1 Difficulty:</label>
         <select id="difficulty" disabled>
           <option value="easy">Easy (Random)</option>
           <option value="medium" selected>Medium (Smart)</option>
@@ -234,10 +237,34 @@
         </select>
       </div>
 
-      <!-- Personality selector (for PvAI mode) -->
+      <!-- Personality selector (for PvAI and AI vs AI mode) -->
       <div class="personality-selector">
-        <label for="personality">AI Personality:</label>
+        <label for="personality">AI 1 Personality:</label>
         <select id="personality" disabled>
+          <option value="aggressive">Aggressive</option>
+          <option value="defensive">Defensive</option>
+          <option value="chill" selected>Chill</option>
+        </select>
+      </div>
+
+      <!-- AI 2 Difficulty selector (for AI vs AI mode) -->
+      <div class="difficulty-selector" id="ai2-settings" style="display: none">
+        <label for="ai2-difficulty">AI 2 Difficulty:</label>
+        <select id="ai2-difficulty" disabled>
+          <option value="easy">Easy (Random)</option>
+          <option value="medium" selected>Medium (Smart)</option>
+          <option value="hard">Hard (Groq)</option>
+        </select>
+      </div>
+
+      <!-- AI 2 Personality selector (for AI vs AI mode) -->
+      <div
+        class="personality-selector"
+        id="ai2-personality-settings"
+        style="display: none"
+      >
+        <label for="ai2-personality">AI 2 Personality:</label>
+        <select id="ai2-personality" disabled>
           <option value="aggressive">Aggressive</option>
           <option value="defensive">Defensive</option>
           <option value="chill" selected>Chill</option>
@@ -367,9 +394,16 @@
         const gamesList = document.getElementById("games-list");
         const pvpBtn = document.getElementById("pvp-btn");
         const pvaiBtn = document.getElementById("pvai-btn");
+        const aivsaiBtn = document.getElementById("aivsai-btn");
         const difficultySelect = document.getElementById("difficulty");
         const aiCommentDisplay = document.getElementById("ai-comment");
         const personalitySelect = document.getElementById("personality");
+        const ai2DifficultySelect = document.getElementById("ai2-difficulty");
+        const ai2PersonalitySelect = document.getElementById("ai2-personality");
+        const ai2Settings = document.getElementById("ai2-settings");
+        const ai2PersonalitySettings = document.getElementById(
+          "ai2-personality-settings",
+        );
 
         // Stats modal elements
         const viewStatsBtn = document.getElementById("view-stats-btn");
@@ -388,12 +422,14 @@
         );
 
         let currentPlayer = "X";
-        let gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
+        let gameState = ["", "", "", "", "", "", "", "", ""];
         let gameActive = true;
         let gameMode = "pvp";
         let isAITurn = false;
         let difficulty = "medium";
         let personality = "chill";
+        let ai2Difficulty = "medium";
+        let ai2Personality = "chill";
 
         // Win conditions
         const winConditions = [
@@ -407,13 +443,112 @@
           [2, 4, 6],
         ];
 
+        // Start AI vs AI game
+        function startAIVsAI() {
+          if (!gameActive || gameMode !== "aivsai") return;
+
+          // AI 1 (X) moves first
+          currentPlayer = "X";
+          statusDisplay.textContent = "AI 1 (X) is thinking...";
+          aiCommentDisplay.textContent = "";
+
+          // Call AI move for AI 1 (X)
+          fetch("/ai-move", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              moves: gameState,
+              difficulty: difficulty,
+              personality: personality,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.move !== undefined && gameState[data.move] === "") {
+                gameState[data.move] = "X";
+                cells[data.move].textContent = "X";
+                if (data.comment) {
+                  aiCommentDisplay.textContent = `AI 1: ${data.comment}`;
+                }
+
+                if (checkWin()) {
+                  statusDisplay.textContent = "AI 1 (X) wins!";
+                  saveGame("X");
+                  gameActive = false;
+                  return;
+                } else if (checkTie()) {
+                  statusDisplay.textContent = "Game ended in a tie!";
+                  saveGame(null);
+                  gameActive = false;
+                  return;
+                }
+
+                // Now AI 2 (O) moves
+                setTimeout(() => {
+                  currentPlayer = "O";
+                  statusDisplay.textContent = "AI 2 (O) is thinking...";
+                  aiCommentDisplay.textContent = "";
+
+                  fetch("/ai-move", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      moves: gameState,
+                      difficulty: ai2Difficulty,
+                      personality: ai2Personality,
+                    }),
+                  })
+                    .then((response) => response.json())
+                    .then((data) => {
+                      if (
+                        data.move !== undefined &&
+                        gameState[data.move] === ""
+                      ) {
+                        gameState[data.move] = "O";
+                        cells[data.move].textContent = "O";
+                        if (data.comment) {
+                          aiCommentDisplay.textContent = `AI 2: ${data.comment}`;
+                        }
+
+                        if (checkWin()) {
+                          statusDisplay.textContent = "AI 2 (O) wins!";
+                          saveGame("O");
+                          gameActive = false;
+                          return;
+                        } else if (checkTie()) {
+                          statusDisplay.textContent = "Game ended in a tie!";
+                          saveGame(null);
+                          gameActive = false;
+                          return;
+                        }
+
+                        // Recursively call startAIVsAI for the next turn
+                        setTimeout(startAIVsAI, 1000);
+                      }
+                    })
+                    .catch((error) => {
+                      console.error("Error fetching AI 2 move:", error);
+                      gameActive = false;
+                      statusDisplay.textContent = "Error: AI 2 move failed.";
+                    });
+                }, 1000); // Delay for better UX
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching AI 1 move:", error);
+              gameActive = false;
+              statusDisplay.textContent = "Error: AI 1 move failed.";
+            });
+        }
+
         // Handle cell click
         function handleCellClick(e) {
           if (
             !historyModal.classList.contains("hidden") ||
             !statsModal.classList.contains("hidden") ||
             !gameActive ||
-            isAITurn
+            isAITurn ||
+            gameMode === "aivsai" // Disable clicks in AI vs AI mode
           ) {
             return;
           }
@@ -514,6 +649,8 @@
               winner: winner,
               difficulty: gameMode === "pvai" ? difficulty : null,
               personality: gameMode === "pvai" ? personality : null,
+              ai2Difficulty: gameMode === "aivsai" ? ai2Difficulty : null,
+              ai2Personality: gameMode === "aivsai" ? ai2Personality : null,
             }),
           })
             .then((response) => response.json())
@@ -636,7 +773,7 @@
 
         // Reset game
         function resetGame() {
-          gameState = ["", "", "", "", "", "", "", "", ""]; // CORRECT: 9 elements
+          gameState = ["", "", "", "", "", "", "", "", ""];
           currentPlayer = "X";
           gameActive = true;
           isAITurn = false;
@@ -650,13 +787,42 @@
         // Set game mode
         function setGameMode(mode) {
           gameMode = mode;
-          pvpBtn.textContent =
-            mode === "pvp" ? "PvP (Human vs Human) ✅" : "PvP (Human vs Human)";
-          pvaiBtn.textContent =
-            mode === "pvai" ? "PvAI (Human vs AI) ✅" : "PvAI (Human vs AI)";
-          // Enable/disable difficulty and personality selectors based on mode
-          difficultySelect.disabled = mode !== "pvai";
-          personalitySelect.disabled = mode !== "pvai";
+          // Reset all buttons first
+          pvpBtn.textContent = "PvP (Human vs Human)";
+          pvaiBtn.textContent = "PvAI (Human vs AI)";
+          aivsaiBtn.textContent = "AI vs AI";
+
+          // Add checkmark to the selected mode
+          if (mode === "pvp") {
+            pvpBtn.textContent = "PvP (Human vs Human) ✅";
+          } else if (mode === "pvai") {
+            pvaiBtn.textContent = "PvAI (Human vs AI) ✅";
+          } else if (mode === "aivsai") {
+            aivsaiBtn.textContent = "AI vs AI ✅";
+          }
+
+          // Enable/disable selectors based on mode
+          if (mode === "pvai") {
+            difficultySelect.disabled = false;
+            personalitySelect.disabled = false;
+            ai2Settings.style.display = "none";
+            ai2PersonalitySettings.style.display = "none";
+          } else if (mode === "aivsai") {
+            difficultySelect.disabled = false;
+            personalitySelect.disabled = false;
+            ai2Settings.style.display = "block";
+            ai2PersonalitySettings.style.display = "block";
+            ai2DifficultySelect.disabled = false; // Enable AI 2 difficulty
+            ai2PersonalitySelect.disabled = false; // Enable AI 2 personality
+            // Start the AI vs AI game after a short delay
+            setTimeout(startAIVsAI, 500);
+          } else {
+            difficultySelect.disabled = true;
+            personalitySelect.disabled = true;
+            ai2Settings.style.display = "none";
+            ai2PersonalitySettings.style.display = "none";
+          }
+
           resetGame();
         }
 
@@ -683,6 +849,18 @@
         pvaiBtn.addEventListener("click", () => {
           setGameMode("pvai");
         });
+        aivsaiBtn.addEventListener("click", () => {
+          setGameMode("aivsai");
+        });
+
+        // AI 2 selectors event listeners
+        ai2DifficultySelect.addEventListener("change", () => {
+          ai2Difficulty = ai2DifficultySelect.value;
+        });
+        ai2PersonalitySelect.addEventListener("change", () => {
+          ai2Personality = ai2PersonalitySelect.value;
+        });
+
         difficultySelect.addEventListener("change", () => {
           difficulty = difficultySelect.value;
           resetGame();
