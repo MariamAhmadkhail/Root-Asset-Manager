@@ -179,6 +179,39 @@
       th {
         background-color: #f2f2f2;
       }
+      /* Chat styles */
+      .chat-container {
+        margin: 20px auto;
+        max-width: 500px;
+        text-align: center;
+      }
+      .chat-messages {
+        background-color: #f9f9f9;
+        height: 200px;
+        overflow-y: auto;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin: 10px 0;
+        text-align: left;
+      }
+      .chat-message {
+        margin: 5px 0;
+        padding: 5px;
+        border-radius: 5px;
+      }
+      .chat-message.user {
+        background-color: #e3f2fd;
+        text-align: right;
+      }
+      .chat-message.ai {
+        background-color: #f1f1f1;
+        text-align: left;
+      }
+      .chat-input {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+      }
     </style>
   </head>
   <body>
@@ -270,6 +303,7 @@
           <option value="chill" selected>Chill</option>
         </select>
       </div>
+
       <!-- AI comment display -->
       <div class="ai-comment" id="ai-comment"></div>
       <div class="status" id="status">Player X's turn</div>
@@ -284,6 +318,22 @@
         <div class="cell" data-index="7"></div>
         <div class="cell" data-index="8"></div>
       </div>
+
+      <!-- Chat with AI -->
+      <div class="chat-container" id="chat-container" style="display: none">
+        <h3>Chat with AI</h3>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input">
+          <input
+            type="text"
+            id="chat-input-field"
+            placeholder="Type a message..."
+            style="width: 70%; padding: 8px"
+          />
+          <button id="chat-send-btn" style="padding: 8px 16px">Send</button>
+        </div>
+      </div>
+
       <div class="game-actions">
         <button id="new-game-btn">New Game</button>
       </div>
@@ -404,6 +454,11 @@
         const ai2PersonalitySettings = document.getElementById(
           "ai2-personality-settings",
         );
+        // Chat elements
+        const chatContainer = document.getElementById("chat-container");
+        const chatMessages = document.getElementById("chat-messages");
+        const chatInputField = document.getElementById("chat-input-field");
+        const chatSendBtn = document.getElementById("chat-send-btn");
 
         // Stats modal elements
         const viewStatsBtn = document.getElementById("view-stats-btn");
@@ -538,6 +593,48 @@
               console.error("Error fetching AI 1 move:", error);
               gameActive = false;
               statusDisplay.textContent = "Error: AI 1 move failed.";
+            });
+        }
+        // Send message to AI
+        function sendMessageToAI() {
+          const message = chatInputField.value.trim();
+          if (!message) return;
+
+          // Add user message to chat
+          const userMessageDiv = document.createElement("div");
+          userMessageDiv.className = "chat-message user";
+          userMessageDiv.textContent = `You: ${message}`;
+          chatMessages.appendChild(userMessageDiv);
+          chatInputField.value = "";
+
+          // Show AI is typing
+          const typingDiv = document.createElement("div");
+          typingDiv.className = "chat-message ai";
+          typingDiv.textContent = "AI: Typing...";
+          chatMessages.appendChild(typingDiv);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+
+          // Send to Groq API
+          fetch("/chat-with-ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              message: message,
+              personality: personality
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.response) {
+                typingDiv.textContent = `AI: ${data.response}`;
+              } else {
+                typingDiv.textContent = "AI: Sorry, I didn't understand that.";
+              }
+              chatMessages.scrollTop = chatMessages.scrollHeight;
+            })
+            .catch((error) => {
+              console.error("Error chatting with AI:", error);
+              typingDiv.textContent = "AI: Error connecting to AI.";
             });
         }
 
@@ -791,6 +888,12 @@
           pvpBtn.textContent = "PvP (Human vs Human)";
           pvaiBtn.textContent = "PvAI (Human vs AI)";
           aivsaiBtn.textContent = "AI vs AI";
+          // Show/hide chat container based on mode
+          if (mode === "pvai" || mode === "aivsai") {
+            chatContainer.style.display = "block";
+          } else {
+            chatContainer.style.display = "none";
+          }
 
           // Add checkmark to the selected mode
           if (mode === "pvp") {
@@ -892,6 +995,11 @@
           leaderboardContent.classList.add("hidden");
           aiStatsContent.classList.remove("hidden");
           loadAIStats();
+        });
+        // Chat event listeners
+        chatSendBtn.addEventListener("click", sendMessageToAI);
+        chatInputField.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") sendMessageToAI();
         });
       }
     </script>

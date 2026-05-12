@@ -223,6 +223,48 @@ app.post("/ai-move", async (req, res) => {
     console.log("User not logged in.");
     return res.status(401).json({ error: "Not logged in." });
   }
+  // CP10-c2: Chat with AI endpoint
+  app.post("/chat-with-ai", async (req, res) => {
+    if (!req.session.user) {
+      return res.status(401).json({ error: "Not logged in." });
+    }
+
+    const { message, personality = "chill" } = req.body;
+
+    try {
+      // Set up personality-based system prompt
+      let systemPrompt = "You are a Tic Tac Toe AI assistant. Respond in 1-2 short, engaging sentences.";
+      if (personality === "aggressive") {
+        systemPrompt = "You are an aggressive Tic Tac Toe AI. Respond with short, competitive messages.";
+      } else if (personality === "defensive") {
+        systemPrompt = "You are a defensive Tic Tac Toe AI. Respond with cautious, strategic messages.";
+      } else if (personality === "chill") {
+        systemPrompt = "You are a chill Tic Tac Toe AI. Respond with relaxed, friendly messages.";
+      }
+
+      const response = await groq.chat.completions.create({
+        messages: [
+          {
+            role: "system",
+            content: systemPrompt,
+          },
+          {
+            role: "user",
+            content: message,
+          },
+        ],
+        model: "llama3-8b-instant",
+        temperature: 0.8,
+        max_tokens: 50,
+      });
+
+      const aiResponse = response.choices[0].message.content.trim();
+      res.json({ response: aiResponse });
+    } catch (error) {
+      console.error("Groq chat error:", error);
+      res.status(500).json({ error: "Failed to get AI response." });
+    }
+  });
 
   const { moves, difficulty } = req.body;
   console.log("Received moves:", moves);
