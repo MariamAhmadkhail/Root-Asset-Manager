@@ -5,41 +5,106 @@
     <title>Checkpoints - Tic Tac Toe AI</title>
     <link href="/styles.css" rel="stylesheet" />
     <style>
+      /* Neon Theme for Checkpoints Page */
       body {
         font-family: Arial, sans-serif;
         max-width: 800px;
         margin: 0 auto;
         padding: 20px;
         text-align: left;
+        background-color: #0f0f1a;
+        color: #e0e0e0;
       }
+
       h1 {
         text-align: center;
+        color: #ff2ced;
+        text-shadow: 0 0 10px rgba(255, 44, 237, 0.7);
+        margin-bottom: 30px;
       }
+
       .checkpoint {
         margin-bottom: 30px;
-        padding: 15px;
-        border: 1px solid #ddd;
+        padding: 20px;
+        border: 1px solid rgba(163, 47, 255, 0.3);
         border-radius: 5px;
-        background-color: #f9f9f9;
+        background: rgba(26, 26, 46, 0.8);
+        box-shadow: 0 0 10px rgba(163, 47, 255, 0.2);
+        transition: all 0.3s;
       }
+
+      .checkpoint:hover {
+        box-shadow: 0 0 15px rgba(163, 47, 255, 0.4);
+        border-color: rgba(163, 47, 255, 0.5);
+      }
+
       .checkpoint h2 {
         margin-top: 0;
-        color: #333;
+        color: #ff2ced;
+        text-shadow: 0 0 5px rgba(255, 44, 237, 0.5);
+        border-bottom: 1px solid rgba(163, 47, 255, 0.3);
+        padding-bottom: 10px;
       }
+
       .checkpoint p {
-        margin: 8px 0;
+        margin: 10px 0;
+        color: #c77dff;
+        line-height: 1.6;
       }
+
+      .checkpoint strong {
+        color: #ff2ced;
+      }
+
       a {
-        color: #0066cc;
+        color: #a329ff;
         text-decoration: none;
+        transition: all 0.3s;
       }
+
       a:hover {
         text-decoration: underline;
+        color: #ff2ced;
+        text-shadow: 0 0 5px rgba(255, 44, 237, 0.5);
       }
+
       .back-link {
         display: block;
         text-align: center;
-        margin: 20px 0;
+        margin: 30px 0;
+      }
+
+      .back-link a {
+        display: inline-block;
+        padding: 10px 20px;
+        background: rgba(163, 47, 255, 0.2);
+        border: 1px solid rgba(163, 47, 255, 0.5);
+        border-radius: 5px;
+        color: #fff;
+        font-weight: bold;
+      }
+
+      .back-link a:hover {
+        background: rgba(163, 47, 255, 0.4);
+        box-shadow: 0 0 10px rgba(163, 47, 255, 0.3);
+      }
+
+      /* Scrollbar styling */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #1a1a2e;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: rgba(163, 47, 255, 0.5);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(163, 47, 255, 0.8);
       }
     </style>
   </head>
@@ -302,12 +367,12 @@
       </p>
       <p>
         <strong>What was hard:</strong> Initially, the leaderboard logic
-        miscounted wins/losses because it didn’t account for the player’s symbol
+        miscounted wins/losses because it didn't account for the player's symbol
         (X or O). Fixed by assuming the human player is always X and the AI is
         O.
       </p>
       <p>
-        <strong>What I'd do differently:</strong> I would store the player’s
+        <strong>What I'd do differently:</strong> I would store the player's
         symbol (X or O) in games.json to avoid assumptions in the stats logic.
       </p>
       <p>
@@ -358,13 +423,14 @@
         better for this use case.
       </p>
     </div>
+
     <!-- CP10 -->
     <div class="checkpoint">
       <h2>CP10-c2: Chat with AI</h2>
       <p>
         <strong>GitHub Commit:</strong>
         <a
-          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/YOUR_COMMIT_HASH"
+          href="https://github.com/MariamAhmadkhail/Root-Asset-Manager/commit/7aff73edbabe54b29fa527a8c24b685753285ea0"
           target="_blank"
           >Link</a
         >
